@@ -1,20 +1,20 @@
-import { SecretMap } from '../types/index.js'
+import { SecretMap } from '../types/index.js';
 
 export function generatePreRequestScript(
-  secrets: SecretMap, 
+  secrets: SecretMap,
   itemName: string,
   vaultName: string
 ): string {
-  const environmentNames = Object.keys(secrets)
-  const secretVarNames = new Set<string>()
-  
+  const environmentNames = Object.keys(secrets);
+  const secretVarNames = new Set<string>();
+
   // Collect all unique secret variable names
   for (const env of environmentNames) {
     for (const varName of Object.keys(secrets[env])) {
-      secretVarNames.add(varName)
+      secretVarNames.add(varName);
     }
   }
-  
+
   return `// === START: 1Password Secret Management ===
 // Auto-generated script to fetch secrets from 1Password
 // Item: ${itemName}
@@ -56,10 +56,14 @@ async function fetchSecretsFrom1Password() {
     }
     
     // Set Bruno environment variables from 1Password
-${Array.from(secretVarNames).map(varName => `    if (section.${varName}) {
+${Array.from(secretVarNames)
+  .map(
+    varName => `    if (section.${varName}) {
       bru.setEnvVar("${varName}", section.${varName});
       console.log(\`  ✓ Set ${varName}\`);
-    }`).join('\n')}
+    }`
+  )
+  .join('\n')}
     
     console.log('Successfully loaded secrets from 1Password');
     
@@ -76,5 +80,5 @@ ${Array.from(secretVarNames).map(varName => `    if (section.${varName}) {
 await fetchSecretsFrom1Password();
 
 // === END: 1Password Secret Management ===
-`
+`;
 }

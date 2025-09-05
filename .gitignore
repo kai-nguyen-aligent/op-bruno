@@ -20,10 +20,6 @@ node_modules
 dist/
 oclif.manifest.json
 
-# Test outputs
-secrets.yml
-test-bruno/
-
 # IDE
 .vscode/
 .idea/
