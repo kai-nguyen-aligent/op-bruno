@@ -15,3 +15,18 @@ node_modules
 
 #!.yarn/cache
 .pnp.*
+
+# Built files
+dist/
+oclif.manifest.json
+
+# Test outputs
+secrets.yml
+test-bruno/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
