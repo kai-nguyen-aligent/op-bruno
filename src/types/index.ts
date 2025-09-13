@@ -10,18 +10,14 @@ export interface BrunoVariable {
     isSecret: boolean;
 }
 
-export interface BrunoConfig {
-    version: string;
-    name: string;
-    type: string;
+export type BrunoConfig = Record<string, unknown> & {
     scripts?: {
+        moduleWhitelist?: string[];
         filesystemAccess?: {
             allow: boolean;
         };
-        preRequestScript?: string;
-        postResponseScript?: string;
     };
-}
+};
 
 export interface OnePasswordOptions {
     vault: string;
