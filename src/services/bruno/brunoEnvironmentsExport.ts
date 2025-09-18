@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import * as path from 'path';
+import path from 'path';
 import { BrunoEnvironment, BrunoVariable } from '../../types/index.js';
 
 export class BrunoEnvironmentsExport {

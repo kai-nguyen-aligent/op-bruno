@@ -1,7 +1,7 @@
 import chalk from 'chalk';
+import ejs from 'ejs';
 import fs from 'fs-extra';
 import path from 'path';
-import { generatePreRequestScript } from './preRequestTemplate.js';
 
 export class BrunoCollectionFileGenerator {
     private readonly startMarker = '// === START: 1Password Secret Management ===';
@@ -28,7 +28,7 @@ export class BrunoCollectionFileGenerator {
         console.log(chalk.blue('ℹ️ Creating new collection.bru'));
 
         const collection: Record<string, string> = {
-            'script:pre-request': generatePreRequestScript(secretsPath),
+            'script:pre-request': await this.generatePreRequestScript(secretsPath),
         };
 
         return collection;
@@ -42,7 +42,7 @@ export class BrunoCollectionFileGenerator {
 
         // pre-request script does not exist, add new script
         if (!collection['script:pre-request']) {
-            collection['script:pre-request'] = generatePreRequestScript(secretsPath);
+            collection['script:pre-request'] = await this.generatePreRequestScript(secretsPath);
             return collection;
         }
 
@@ -54,7 +54,7 @@ export class BrunoCollectionFileGenerator {
 
         collection['script:pre-request'] = this.mergePreRequestScripts(
             collection['script:pre-request'],
-            generatePreRequestScript(secretsPath)
+            await this.generatePreRequestScript(secretsPath)
         );
 
         return collection;
@@ -118,5 +118,10 @@ export class BrunoCollectionFileGenerator {
         }
 
         return lines.join('\n');
+    }
+
+    private async generatePreRequestScript(secretConfigPath: string) {
+        const template = await fs.readFile('./templates/preRequestTemplate.js', 'utf-8');
+        return ejs.render(template, { secretConfigPath });
     }
 }

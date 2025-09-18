@@ -22,5 +22,5 @@ export type BrunoConfig = Record<string, unknown> & {
 export interface OnePasswordOptions {
     vault: string;
     title: string;
-    category: string;
+    item: string;
 }

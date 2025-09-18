@@ -2141,6 +2141,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/ejs@npm:^3":
+  version: 3.1.5
+  resolution: "@types/ejs@npm:3.1.5"
+  checksum: 10c0/13d994cf0323d7e0ad33b9384914ccd3b4cd8bf282eced3649b1621b66ee7c784ac2d120a9d7b1f43d6f873518248fb8c3221b06a649b847860b9c2389a0b0ed
+  languageName: node
+  linkType: hard
+
 "@types/estree@npm:^1.0.6":
   version: 1.0.8
   resolution: "@types/estree@npm:1.0.8"
@@ -2162,13 +2169,6 @@ __metadata:
   version: 4.0.4
   resolution: "@types/http-cache-semantics@npm:4.0.4"
   checksum: 10c0/51b72568b4b2863e0fe8d6ce8aad72a784b7510d72dc866215642da51d84945a9459fa89f49ec48f1e9a1752e6a78e85a4cda0ded06b1c73e727610c925f9ce6
-  languageName: node
-  linkType: hard
-
-"@types/js-yaml@npm:^4.0.9":
-  version: 4.0.9
-  resolution: "@types/js-yaml@npm:4.0.9"
-  checksum: 10c0/24de857aa8d61526bbfbbaa383aa538283ad17363fcd5bb5148e2c7f604547db36646440e739d78241ed008702a8920665d1add5618687b6743858fae00da211
   languageName: node
   linkType: hard
 
@@ -5103,15 +5103,15 @@ __metadata:
     "@aligent/ts-code-standards": "npm:^4.0.2"
     "@oclif/core": "npm:^4.5.2"
     "@oclif/plugin-help": "npm:^6.2.32"
+    "@types/ejs": "npm:^3"
     "@types/fs-extra": "npm:^11.0.4"
-    "@types/js-yaml": "npm:^4.0.9"
     "@types/node": "npm:^22.10.5"
     "@typescript-eslint/eslint-plugin": "npm:^8.20.0"
     "@typescript-eslint/parser": "npm:^8.20.0"
     chalk: "npm:^5.6.0"
+    ejs: "npm:^3.1.10"
     eslint: "npm:^9.18.0"
     fs-extra: "npm:^11.3.1"
-    js-yaml: "npm:^4.1.0"
     oclif: "npm:^4.22.0"
     prettier: "npm:^3.6.2"
     tsx: "npm:^4.20.5"
