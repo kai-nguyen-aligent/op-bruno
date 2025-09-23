@@ -2,7 +2,32 @@
 
 A CLI tool to sync Bruno API client secrets with 1Password, enabling secure secret management for your API testing workflows.
 
-## Features
+[![Version](https://img.shields.io/npm/v/op-sync-bruno.svg)](https://npmjs.org/package/op-sync-bruno)
+[![Downloads/week](https://img.shields.io/npm/dw/op-sync-bruno.svg)](https://npmjs.org/package/op-sync-bruno)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support%20Me-orange)](https://coff.ee/kai.nguyen)
+
+<!-- toc -->
+
+- [op-sync-bruno](#op-sync-bruno)
+- [Features](#features)
+- [Installation](#installation)
+- [Prerequisites](#prerequisites)
+- [Usage](#usage)
+- [Commands](#commands)
+  - [`op-sync-bruno help [COMMAND]`](#op-sync-bruno-help-command)
+- [How It Works](#how-it-works)
+    - [Pre-request Script](#pre-request-script)
+- [Security Considerations](#security-considerations)
+- [Development](#development)
+- [Troubleshooting](#troubleshooting)
+    - [1Password CLI Not Found](#1password-cli-not-found)
+    - [Vault Access Denied](#vault-access-denied)
+    - [Pre-request Script Already Exists](#pre-request-script-already-exists)
+- [License](#license)
+- [Contributing](#contributing)
+<!-- tocstop -->
+
+# Features
 
 - **Extract Secrets**: Automatically identifies and extracts secret variables from Bruno environment files
 - **JSON Export**: Exports extracted secrets to a structured JSON file
@@ -10,7 +35,7 @@ A CLI tool to sync Bruno API client secrets with 1Password, enabling secure secr
 - **Pre-request Scripts**: Generates Bruno pre-request scripts to fetch secrets from 1Password
 - **Filesystem Access**: Automatically configures Bruno collections for filesystem access
 
-## Installation
+# Installation
 
 ```bash
 # Install the tool globally
@@ -20,17 +45,59 @@ npm install -g op-sync-bruno
 npx op-sync-bruno
 ```
 
-## Prerequisites
+# Prerequisites
 
 - Node.js >= 18.0.0
 - [1Password CLI](https://developer.1password.com/docs/cli/get-started/)
 - [Bruno API client](https://usebruno.com)
 
-## Usage
+# Usage
 
-<!-- TODO: This should come from oclif -->
+<!-- usage -->
 
-## How It Works
+```sh-session
+$ npm install -g op-sync-bruno
+$ op-sync-bruno COMMAND
+running command...
+$ op-sync-bruno (--version)
+op-sync-bruno/1.0.0 darwin-arm64 node-v20.18.3
+$ op-sync-bruno --help [COMMAND]
+USAGE
+  $ op-sync-bruno COMMAND
+...
+```
+
+<!-- usagestop -->
+
+# Commands
+
+<!-- commands -->
+
+- [`op-sync-bruno help [COMMAND]`](#op-sync-bruno-help-command)
+
+## `op-sync-bruno help [COMMAND]`
+
+Display help for op-sync-bruno.
+
+```
+USAGE
+  $ op-sync-bruno help [COMMAND...] [-n]
+
+ARGUMENTS
+  COMMAND...  Command to show help for.
+
+FLAGS
+  -n, --nested-commands  Include all nested commands in the output.
+
+DESCRIPTION
+  Display help for op-sync-bruno.
+```
+
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v6.2.32/src/commands/help.ts)_
+
+<!-- commandsstop -->
+
+# How It Works
 
 1. **Secret Extraction**: The tool scans Bruno environment files (`.bru` files) in the `environments` directory and identifies secret variables.
 
@@ -65,13 +132,13 @@ The generated pre-request script in `collection.bru` will:
 2. Fetch corresponding secrets from 1Password
 3. Set environment variables for use in requests
 
-## Security Considerations
+# Security Considerations
 
 - Ensure 1Password CLI is properly configured and authenticated
 - Use appropriate vault permissions in 1Password
 - Review generated pre-request scripts before use
 
-## Development
+# Development
 
 ```bash
 # Run in development mode
@@ -87,7 +154,7 @@ yarn test
 yarn lint
 ```
 
-## Troubleshooting
+# Troubleshooting
 
 ### 1Password CLI Not Found
 
@@ -105,10 +172,10 @@ op signin
 
 The tool will preserve existing scripts and add the secret management code. Review the modified `collection.bru` file to ensure compatibility.
 
-## License
+# License
 
 MIT
 
-## Contributing
+# Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
