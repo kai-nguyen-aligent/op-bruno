@@ -11,6 +11,7 @@ export interface BrunoVariable {
 }
 
 export type BrunoConfig = Record<string, unknown> & {
+    name: string;
     scripts?: {
         moduleWhitelist?: string[];
         filesystemAccess?: {

@@ -11,7 +11,7 @@ export class BrunoConfigManager {
         this.configPath = path.join(collectionDir, 'bruno.json');
     }
 
-    async getConfig(): Promise<BrunoConfig> {
+    private async getConfig(): Promise<BrunoConfig> {
         const isConfigExist = await fs.pathExists(this.configPath);
 
         if (!isConfigExist) {
@@ -22,7 +22,14 @@ export class BrunoConfigManager {
         return JSON.parse(content);
     }
 
-    async updateConfig(config: BrunoConfig) {
+    async getName() {
+        const config = await this.getConfig();
+        return config.name;
+    }
+
+    async updateConfig() {
+        const config = await this.getConfig();
+
         const moduleWhitelist: string[] = config.scripts?.moduleWhitelist || [];
 
         this.requiredModules.forEach(required => {

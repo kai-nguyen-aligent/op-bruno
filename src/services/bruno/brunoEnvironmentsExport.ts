@@ -4,9 +4,13 @@ import { BrunoEnvironment, BrunoVariable } from '../../types/index.js';
 
 export class BrunoEnvironmentsExport {
     private environmentsPath: string;
+    private vault: string;
+    private item?: string;
 
-    constructor(collectionDir: string) {
+    constructor(collectionDir: string, vault: string, item: string) {
         this.environmentsPath = path.join(collectionDir, 'environments');
+        this.vault = vault;
+        this.item = item;
     }
 
     async parseEnvironments(): Promise<BrunoEnvironment[]> {
@@ -29,7 +33,11 @@ export class BrunoEnvironmentsExport {
         return environments;
     }
 
-    private parseEnvironmentFile(content: string, name: string): BrunoEnvironment {
+    private constructSecretVaultReference(envName: string, varName: string) {
+        return `op://${this.vault}/${this.item}/${envName}/${varName}`;
+    }
+
+    private parseEnvironmentFile(content: string, envName: string): BrunoEnvironment {
         const lines = content.split('\n');
         const variables: BrunoVariable[] = [];
 
@@ -62,12 +70,16 @@ export class BrunoEnvironmentsExport {
             if (inVarSection || inSecretSection) {
                 // Parse variable line
                 const item = trimmed.replaceAll(',', '').replaceAll('~', '');
-                const [name, value] = item.split(':');
+                const [varName, varValue] = item.split(':');
 
-                if (name) {
+                if (varName) {
+                    const value = inVarSection
+                        ? varValue
+                        : this.constructSecretVaultReference(envName, varName);
+
                     variables.push({
-                        name,
-                        value: inVarSection ? value : undefined,
+                        name: varName,
+                        value,
                         isSecret: inSecretSection,
                         enabled: trimmed.startsWith('~'),
                     });
@@ -76,7 +88,7 @@ export class BrunoEnvironmentsExport {
         }
 
         return {
-            name,
+            name: envName,
             variables,
         };
     }

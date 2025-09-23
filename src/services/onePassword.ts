@@ -16,7 +16,7 @@ export class OnePasswordManager {
         return assignments;
     }
 
-    checkCli() {
+    private checkCli() {
         op.validateCli().catch(error => {
             console.error(chalk.yellow('⚠️ Unable to access 1Password CLI:', error));
             console.error(
@@ -27,21 +27,7 @@ export class OnePasswordManager {
         return true;
     }
 
-    verifyAccess(vault: string) {
-        try {
-            op.vault.get(vault);
-            return true;
-        } catch {
-            console.error(chalk.red(`Cannot access vault "${vault}". Please ensure:`));
-            console.error(chalk.yellow('  1. You are signed in to 1Password CLI (run: op signin)'));
-            console.error(
-                chalk.yellow(`  2. The vault "${vault}" exists and you have access to it`)
-            );
-            return false;
-        }
-    }
-
-    createItem(secrets: Map<string, BrunoVariable[]>, options: OnePasswordOptions) {
+    private createItem(secrets: Map<string, BrunoVariable[]>, options: OnePasswordOptions) {
         if (!this.checkCli()) {
             return null;
         }
@@ -80,43 +66,58 @@ export class OnePasswordManager {
         }
     }
 
-    updateItem(secrets: Map<string, BrunoVariable[]>, options: OnePasswordOptions) {
+    private updateItem(secrets: Map<string, BrunoVariable[]>, item: op.Item) {
+        if (!this.checkCli()) {
+            return null;
+        }
+
+        console.log(
+            chalk.blue(`📝 Updating 1Password item ${item.title} in vault ${item.vault.name}`)
+        );
+        // TODO: remove fields in the item????
+
+        try {
+            const assignments = this.buildFieldAssignments(secrets);
+
+            const { id } = op.item.edit(item.id, assignments);
+
+            console.log(
+                chalk.green(
+                    `✓ Updated 1Password item "${item.title}" in vault "${item.vault.name}"`
+                )
+            );
+            return id;
+        } catch (error) {
+            console.error(chalk.red('Failed to update 1Password item:'), error);
+            return null;
+        }
+    }
+
+    upsertItem(secrets: Map<string, BrunoVariable[]>, options: OnePasswordOptions) {
+        // TODO: check if item exist and get item Id
+        const item = op.item.get(options.title, { vault: options.vault });
+        if (!item) {
+            return this.createItem(secrets, options);
+        }
+
+        return this.updateItem(secrets, item as op.Item);
+    }
+
+    verifyAccess(vault: string) {
         if (!this.checkCli()) {
             return false;
         }
 
-        const { vault, title } = options;
-        console.log(chalk.blue(`📝 Updating 1Password item ${title} in vault ${vault}`));
-
-        // TODO: get item information
-        // Update by add or remove fields in the item
-
-        return true;
-
-        // try {
-        //     // Build update commands for each field
-        //     const updates: string[] = [];
-
-        //     for (const [envName, envSecrets] of Object.entries(secrets)) {
-        //         const sectionName = `${envName} Environment`;
-
-        //         for (const [key, value] of Object.entries(envSecrets)) {
-        //             updates.push(
-        //                 `op item edit "${title}" --vault="${vault}" '${sectionName}.${key}[password]=${value}'`
-        //             );
-        //         }
-        //     }
-
-        //     // Execute all updates
-        //     for (const updateCmd of updates) {
-        //         await execAsync(updateCmd);
-        //     }
-
-        //     console.log(chalk.green(`✓ Updated 1Password item "${itemName}" in vault "${vault}"`));
-        //     return true;
-        // } catch (error) {
-        //     console.error(chalk.red('Failed to update 1Password item:'), error);
-        //     return false;
-        // }
+        try {
+            op.vault.get(vault);
+            return true;
+        } catch {
+            console.error(chalk.red(`Cannot access vault "${vault}". Please ensure:`));
+            console.error(chalk.yellow('  1. You are signed in to 1Password CLI (run: op signin)'));
+            console.error(
+                chalk.yellow(`  2. The vault "${vault}" exists and you have access to it`)
+            );
+            return false;
+        }
     }
 }

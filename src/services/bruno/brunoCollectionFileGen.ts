@@ -13,7 +13,7 @@ export class BrunoCollectionFileGenerator {
         this.collectionFilePath = path.join(collectionDir, 'collection.bru');
     }
 
-    async updateCollection(secretsPath: string) {
+    async upsertCollection(secretsPath: string) {
         const isCollectionFileExist = await fs.pathExists(this.collectionFilePath);
 
         const collection = isCollectionFileExist
