@@ -1,30 +1,30 @@
-# op-sync-bruno
+# op-bruno
 
 A CLI tool to sync Bruno API client secrets with 1Password, enabling secure secret management for your API testing workflows.
 
-[![Version](https://img.shields.io/npm/v/op-sync-bruno.svg)](https://npmjs.org/package/op-sync-bruno)
-[![Downloads/week](https://img.shields.io/npm/dw/op-sync-bruno.svg)](https://npmjs.org/package/op-sync-bruno)
+[![Version](https://img.shields.io/npm/v/op-bruno.svg)](https://npmjs.org/package/op-bruno)
+[![Downloads/week](https://img.shields.io/npm/dw/op-bruno.svg)](https://npmjs.org/package/op-bruno)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support%20Me-orange)](https://coff.ee/kai.nguyen)
 
 <!-- toc -->
-
-- [op-sync-bruno](#op-sync-bruno)
-- [Features](#features)
-- [Installation](#installation)
-- [Prerequisites](#prerequisites)
-- [Usage](#usage)
-- [Commands](#commands)
-  - [`op-sync-bruno help [COMMAND]`](#op-sync-bruno-help-command)
-- [How It Works](#how-it-works)
-    - [Pre-request Script](#pre-request-script)
-- [Security Considerations](#security-considerations)
-- [Development](#development)
-- [Troubleshooting](#troubleshooting)
-    - [1Password CLI Not Found](#1password-cli-not-found)
-    - [Vault Access Denied](#vault-access-denied)
-    - [Pre-request Script Already Exists](#pre-request-script-already-exists)
-- [License](#license)
-- [Contributing](#contributing)
+* [op-bruno](#op-bruno)
+* [Features](#features)
+* [Installation](#installation)
+* [Install the tool globally](#install-the-tool-globally)
+* [Execute without installation](#execute-without-installation)
+* [Prerequisites](#prerequisites)
+* [Usage](#usage)
+* [Commands](#commands)
+* [How It Works](#how-it-works)
+* [Security Considerations](#security-considerations)
+* [Development](#development)
+* [Run in development mode](#run-in-development-mode)
+* [Build the project](#build-the-project)
+* [Run tests](#run-tests)
+* [Lint code](#lint-code)
+* [Troubleshooting](#troubleshooting)
+* [License](#license)
+* [Contributing](#contributing)
 <!-- tocstop -->
 
 # Features
@@ -39,10 +39,10 @@ A CLI tool to sync Bruno API client secrets with 1Password, enabling secure secr
 
 ```bash
 # Install the tool globally
-npm install -g op-sync-bruno
+npm install -g op-bruno
 
 # Execute without installation
-npx op-sync-bruno
+npx op-bruno
 ```
 
 # Prerequisites
@@ -54,34 +54,32 @@ npx op-sync-bruno
 # Usage
 
 <!-- usage -->
-
 ```sh-session
-$ npm install -g op-sync-bruno
-$ op-sync-bruno COMMAND
+$ npm install -g op-bruno
+$ op-bruno COMMAND
 running command...
-$ op-sync-bruno (--version)
-op-sync-bruno/1.0.0 darwin-arm64 node-v20.18.3
-$ op-sync-bruno --help [COMMAND]
+$ op-bruno (--version)
+op-bruno/0.0.1 darwin-arm64 node-v20.18.3
+$ op-bruno --help [COMMAND]
 USAGE
-  $ op-sync-bruno COMMAND
+  $ op-bruno COMMAND
 ...
 ```
-
 <!-- usagestop -->
 
 # Commands
 
 <!-- commands -->
+* [`op-bruno help [COMMAND]`](#op-bruno-help-command)
+* [`op-bruno sync COLLECTION`](#op-bruno-sync-collection)
 
-- [`op-sync-bruno help [COMMAND]`](#op-sync-bruno-help-command)
+## `op-bruno help [COMMAND]`
 
-## `op-sync-bruno help [COMMAND]`
-
-Display help for op-sync-bruno.
+Display help for op-bruno.
 
 ```
 USAGE
-  $ op-sync-bruno help [COMMAND...] [-n]
+  $ op-bruno help [COMMAND...] [-n]
 
 ARGUMENTS
   COMMAND...  Command to show help for.
@@ -90,11 +88,38 @@ FLAGS
   -n, --nested-commands  Include all nested commands in the output.
 
 DESCRIPTION
-  Display help for op-sync-bruno.
+  Display help for op-bruno.
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v6.2.32/src/commands/help.ts)_
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v6.2.33/src/commands/help.ts)_
 
+## `op-bruno sync COLLECTION`
+
+Extract secrets from Bruno environment files and sync with 1Password
+
+```
+USAGE
+  $ op-bruno sync COLLECTION [--vault <value>] [--title <value>] [--outName <value>] [--1password]
+
+ARGUMENTS
+  COLLECTION  Path to Bruno collection directory
+
+FLAGS
+  --1password        Create or Update 1Password item
+  --outName=<value>  [default: op-secrets.json] JSON output file name
+  --title=<value>    1Password item title
+  --vault=<value>    [default: Employee] 1Password vault name
+
+DESCRIPTION
+  Extract secrets from Bruno environment files and sync with 1Password
+
+EXAMPLES
+  $ op-bruno sync ./bruno-project -o secrets.yml
+
+  $ op-bruno sync ./bruno-project -o secrets.yml --1password --vault Engineering --title "API Secrets" --category API
+```
+
+_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v0.0.1/src/commands/sync.ts)_
 <!-- commandsstop -->
 
 # How It Works

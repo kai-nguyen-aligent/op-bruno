@@ -1,12 +1,14 @@
 {
-  "name": "op-sync-bruno",
+  "name": "op-bruno",
   "version": "0.0.1",
   "description": "CLI tool to sync Bruno secrets with 1Password",
   "author": "Kai Nguyen",
-  "homepage": "https://github.com/kai-nguyen-aligent/store-parameters",
-  "bugs": "https://github.com/kai-nguyen-aligent/store-parameters/issues",
+  "homepage": "https://github.com/kai-nguyen-aligent/op-bruno",
+  "bugs": "https://github.com/kai-nguyen-aligent/op-bruno/issues",
+  "repository": "kai-nguyen-aligent/op-bruno",
   "type": "module",
   "main": "dist/index.js",
+  "bin": "./bin/run.js",
   "scripts": {
     "build": "shx rm -rf dist && tsc -b",
     "dev": "yarn build && yarn prepack && ./bin/dev.js",
@@ -35,11 +37,9 @@
     "eslint": "^9.18.0",
     "oclif": "^4.22.0",
     "prettier": "^3.6.2",
+    "shx": "^0.4.0",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
-  },
-  "bin": {
-    "op-sync-bruno": "./bin/run.js"
   },
   "files": [
     "/bin",
@@ -47,8 +47,8 @@
     "/oclif.manifest.json"
   ],
   "oclif": {
-    "bin": "op-sync-bruno",
-    "dirname": "op-sync-bruno",
+    "bin": "op-bruno",
+    "dirname": "op-bruno",
     "commands": "./dist/commands",
     "plugins": [
       "@oclif/plugin-help"

@@ -8,7 +8,7 @@ import { BrunoConfigManager } from '../services/bruno/brunoConfigManager.js';
 import { BrunoEnvironmentsExport } from '../services/bruno/brunoEnvironmentsExport.js';
 import { OnePasswordManager } from '../services/onePassword.js';
 
-export default class Extract extends Command {
+export default class Sync extends Command {
     static override description =
         'Extract secrets from Bruno environment files and sync with 1Password';
 
@@ -18,7 +18,7 @@ export default class Extract extends Command {
     ];
 
     static override args = {
-        brunoDir: Args.string({
+        collection: Args.string({
             description: 'Path to Bruno collection directory',
             required: true,
         }),
@@ -30,10 +30,10 @@ export default class Extract extends Command {
             description: '1Password item title',
             defaultHelp: 'Default to collection name',
         }),
-        output: Flags.string({
-            description: 'Output JSON file path',
+        outName: Flags.string({
+            description: 'JSON output file name',
             default: 'op-secrets.json',
-            defaultHelp: 'Relative to collection dir',
+            defaultHelp: 'The file will be saved in collection dir',
         }),
         '1password': Flags.boolean({
             description: 'Create or Update 1Password item',
@@ -42,25 +42,27 @@ export default class Extract extends Command {
     };
 
     async run(): Promise<void> {
-        const { args, flags } = await this.parse(Extract);
+        const { args, flags } = await this.parse(Sync);
 
         // Resolve Bruno directory path
-        const brunoDir = path.resolve(args.brunoDir);
+        const brunoDir = path.resolve(args.collection);
 
         // Validate Bruno directory
         if (!(await fs.pathExists(brunoDir))) {
             this.error(`Bruno directory not found: ${brunoDir}`);
         }
 
+        const outPath = path.join(brunoDir, flags.outName);
+
         this.log(chalk.bold.cyan('\n🔐 Bruno Secrets Sync Command Line Tool\n'));
         this.log(chalk.blue(`📁 Bruno directory: ${brunoDir}`));
-        this.log(chalk.blue(`📝 Output file: ${flags.output}\n`));
+        this.log(chalk.blue(`📝 Output file: ${outPath}\n`));
 
         try {
             const configManager = new BrunoConfigManager(brunoDir);
             const name = await configManager.getName();
 
-            const { '1password': upsert1PasswordItem, output, title = name, vault } = flags;
+            const { '1password': upsert1PasswordItem, outName, title = name, vault } = flags;
 
             this.debug(chalk.bold('Step 1: Extracting secrets from Bruno environments...'));
             const exporter = new BrunoEnvironmentsExport(brunoDir, vault, title);
@@ -73,7 +75,7 @@ export default class Extract extends Command {
 
             this.debug(chalk.bold('\nStep 2: Exporting secrets to JSON...'));
             const secretsObj = Object.fromEntries(secrets);
-            await fs.writeFile(output, JSON.stringify(secretsObj, null, 2));
+            await fs.writeFile(outPath, JSON.stringify(secretsObj, null, 2));
 
             this.debug(chalk.bold('\nStep 3: Updating bruno.json...'));
             await configManager.updateConfig();
@@ -102,7 +104,7 @@ export default class Extract extends Command {
 
             this.log(chalk.bold('\nStep 5: Updating collection.bru with pre-request script...'));
             const collectionGen = new BrunoCollectionFileGenerator(brunoDir);
-            await collectionGen.upsertCollection(output);
+            await collectionGen.upsertCollection(outName);
 
             // Success summary
             this.log(chalk.bold.green('\n✅ Successfully completed Bruno secrets sync!\n'));
@@ -112,7 +114,7 @@ export default class Extract extends Command {
                     `  • Extracted secrets from ${Object.keys(secrets).length} environment(s)`
                 )
             );
-            this.log(chalk.green(`  • Exported secrets to ${output}`));
+            this.log(chalk.green(`  • Exported secrets to ${outPath}`));
             this.log(chalk.green(`  • Enabled filesystem access in bruno.json`));
             this.log(chalk.green(`  • Updated collection.bru with pre-request script`));
 

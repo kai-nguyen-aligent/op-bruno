@@ -26,3 +26,4 @@ oclif.manifest.json
 
 # OS
 .DS_Store
+tsconfig.tsbuildinfo
