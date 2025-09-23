@@ -45,7 +45,7 @@ export default class Sync extends Command {
         const { args, flags } = await this.parse(Sync);
 
         // Resolve Bruno directory path
-        const brunoDir = path.resolve(args.collection);
+        const brunoDir = path.resolve(process.cwd(), args.collection);
 
         // Validate Bruno directory
         if (!(await fs.pathExists(brunoDir))) {

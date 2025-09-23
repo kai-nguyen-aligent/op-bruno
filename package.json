@@ -10,7 +10,7 @@
   "main": "dist/index.js",
   "bin": "./bin/run.js",
   "scripts": {
-    "build": "shx rm -rf dist && tsc -b",
+    "build": "shx rm -rf dist && tsc -b && shx cp -r src/templates dist/templates",
     "dev": "yarn build && yarn prepack && ./bin/dev.js",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "yarn lint",

@@ -6,6 +6,7 @@ import path from 'path';
 export class BrunoCollectionFileGenerator {
     private readonly startMarker = '// === START: 1Password Secret Management ===';
     private readonly endMarker = '// === END: 1Password Secret Management ===';
+    private readonly templatePath = '../../templates/preRequestTemplate.js';
 
     private collectionFilePath: string;
 
@@ -121,7 +122,8 @@ export class BrunoCollectionFileGenerator {
     }
 
     private async generatePreRequestScript(secretConfigPath: string) {
-        const template = await fs.readFile('./templates/preRequestTemplate.js', 'utf-8');
+        const templatePath = path.resolve(import.meta.dirname, this.templatePath);
+        const template = await fs.readFile(templatePath, 'utf-8');
         return ejs.render(template, { secretConfigPath });
     }
 }
