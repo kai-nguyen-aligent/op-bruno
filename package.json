@@ -1,0 +1,63 @@
+{
+  "name": "op-sync-bruno",
+  "version": "0.0.1",
+  "description": "CLI tool to sync Bruno secrets with 1Password",
+  "author": "Kai Nguyen",
+  "homepage": "https://github.com/kai-nguyen-aligent/store-parameters",
+  "bugs": "https://github.com/kai-nguyen-aligent/store-parameters/issues",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "shx rm -rf dist && tsc -b",
+    "dev": "yarn build && yarn prepack && ./bin/dev.js",
+    "postpack": "rm -f oclif.manifest.json",
+    "posttest": "yarn lint",
+    "prepack": "oclif manifest && oclif readme",
+    "prepare": "yarn build",
+    "lint": "eslint . --ext .ts",
+    "test": "mocha --forbid-only \"test/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@1password/op-js": "^0.1.13",
+    "@oclif/core": "^4.5.2",
+    "@oclif/plugin-help": "^6.2.32",
+    "chalk": "^5.6.0",
+    "ejs": "^3.1.10",
+    "fs-extra": "^11.3.1"
+  },
+  "devDependencies": {
+    "@aligent/ts-code-standards": "^4.0.2",
+    "@types/ejs": "^3",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.10.5",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "eslint": "^9.18.0",
+    "oclif": "^4.22.0",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  },
+  "bin": {
+    "op-sync-bruno": "./bin/run.js"
+  },
+  "files": [
+    "/bin",
+    "/dist",
+    "/oclif.manifest.json"
+  ],
+  "oclif": {
+    "bin": "op-sync-bruno",
+    "dirname": "op-sync-bruno",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help"
+    ],
+    "topicSeparator": " "
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT",
+  "packageManager": "yarn@4.9.4"
+}
