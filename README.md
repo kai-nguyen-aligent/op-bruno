@@ -5,7 +5,7 @@ A CLI tool to sync Bruno API client secrets with 1Password, enabling secure secr
 ## Features
 
 - **Extract Secrets**: Automatically identifies and extracts secret variables from Bruno environment files
-- **YAML Export**: Exports extracted secrets to a structured YAML file
+- **JSON Export**: Exports extracted secrets to a structured JSON file
 - **1Password Integration**: Creates and manages secrets in 1Password vaults
 - **Pre-request Scripts**: Generates Bruno pre-request scripts to fetch secrets from 1Password
 - **Filesystem Access**: Automatically configures Bruno collections for filesystem access
@@ -34,15 +34,19 @@ npx op-sync-bruno
 
 1. **Secret Extraction**: The tool scans Bruno environment files (`.bru` files) in the `environments` directory and identifies secret variables.
 
-2. **YAML Export**: Extracted secrets are exported to a YAML file with the following structure:
+2. **JSON Export**: Extracted secrets are exported to a JSON file with the following structure:
 
-   ```yaml
-   development:
-     API_KEY: op://path/to/the/secret
-     SECRET_TOKEN: op://path/to/the/secret
-   production:
-     API_KEY: op://path/to/the/secret
-     SECRET_TOKEN: op://path/to/the/secret
+   ```json
+   {
+     "development": {
+       "API_KEY": "op://path/to/the/secret",
+       "SECRET_TOKEN": "op://path/to/the/secret"
+     },
+     "production": {
+       "API_KEY": "op://path/to/the/secret",
+       "SECRET_TOKEN": "op://path/to/the/secret"
+     }
+   }
    ```
 
 3. **Bruno Configuration**: The tool modifies `bruno.json` to enable filesystem access, allowing pre-request scripts to execute system commands
@@ -50,18 +54,16 @@ npx op-sync-bruno
 4. **Pre-request Script Generation**: A pre-request script is added to `collection.bru` that:
    - Fetches secrets from 1Password based on the current environment
    - Sets Bruno environment variables with the fetched values
-   - Provides fallback handling if 1Password is unavailable
 
-5. **1Password Storage**: If enabled, creates a structured 1Password item with sections for each environment
+5. **1Password Storage**: If enabled, creates/updates a structured 1Password item with sections for each environment
 
-## Pre-request Script
+### Pre-request Script
 
 The generated pre-request script in `collection.bru` will:
 
 1. Detect the current Bruno environment
 2. Fetch corresponding secrets from 1Password
 3. Set environment variables for use in requests
-4. Handle errors gracefully with fallback to existing values
 
 ## Security Considerations
 
