@@ -1,0 +1,49 @@
+<%= startMarker %>
+// Auto-generated script to fetch secrets from 1Password
+// Secret Configuration Path: <%= secretConfigPath %>
+
+const { execSync } = require('child_process');
+const { readFileSync, existsSync } = require('fs');
+
+async function fetchSecretsFrom1Password() {
+    const isSecretLoaded = bru.getEnvVar('OP_SECRETS_LOADED');
+
+    if (!isSecretLoaded) {
+        const env = bru.getEnvName();
+        console.log(`Fetching secrets for ${env} environment from 1Password...`);
+
+        const op = execSync(`which op`).toString();
+        const configPath = `${bru.cwd()}/<%= secretConfigPath %>`;
+        if (!existsSync(configPath)) {
+            throw new Error(`Secrets doesn't exist at ${configPath}`);
+        }
+
+        const config = JSON.parse(readFileSync(configPath, 'utf8'));
+        const secrets = config[env];
+
+        if (!secrets) {
+            throw new Error(`No secrets found for ${env} environment`);
+        }
+
+        const promise = secrets.map(async secret => {
+            const value = execSync(`${op} read "${secret.value}"`).toString();
+            // TODO: Remove this debug log
+            console.debug(`Setting ${secret.name} to ${value.trim()}`);
+            bru.setEnvVar(secret.name, value.trim());
+        });
+
+        Promise.all(promise).catch(error => {
+            console.error(`Error fetching secrets from 1Password`, error);
+        });
+
+        bru.setEnvVar('OP_SECRETS_LOADED', 'true');
+        console.log(
+            `Secrets fetched successfully for ${env}. They will be available until Bruno is restarted.`
+        );
+    }
+}
+
+// Execute the function
+await fetchSecretsFrom1Password();
+
+<%= endMarker %>
