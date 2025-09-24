@@ -59,7 +59,7 @@ $ npm install -g op-bruno
 $ op-bruno COMMAND
 running command...
 $ op-bruno (--version)
-op-bruno/0.0.1 linux-x64 node-v20.19.5
+op-bruno/0.0.2 linux-x64 node-v20.19.5
 $ op-bruno --help [COMMAND]
 USAGE
   $ op-bruno COMMAND
@@ -119,7 +119,7 @@ EXAMPLES
   $ op-bruno sync ./bruno-project -o secrets.yml --1password --vault Engineering --title "API Secrets" --category API
 ```
 
-_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v0.0.1/src/commands/sync.ts)_
+_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v0.0.2/src/commands/sync.ts)_
 <!-- commandsstop -->
 
 # How It Works
