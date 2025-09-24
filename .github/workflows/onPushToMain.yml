@@ -67,18 +67,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Install tarballs dependencies
-        if: ${{ steps.version-check.outputs.skipped == 'false' }}
-        run: |
-          sudo apt update
-          sudo apt install nsis p7zip-full p7zip-rar -y
-
-      - name: Pack tarballs & generate oclif README
-        if: ${{ steps.version-check.outputs.skipped == 'false' }}
-        run: |
-          pnpm exec oclif pack tarballs -r .
-          pnpm run postpack
-
       - name: Create Github Release
         uses: ncipollo/release-action@v1
         if: ${{ steps.version-check.outputs.skipped == 'false' }}
