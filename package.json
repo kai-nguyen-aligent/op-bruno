@@ -11,11 +11,11 @@
   "bin": "./bin/run.js",
   "scripts": {
     "build": "shx rm -rf dist && tsc -b && shx cp -r src/templates dist/templates",
-    "dev": "yarn build && yarn prepack && ./bin/dev.js",
+    "dev": "pnpm run build && pnpm run prepack && ./bin/dev.js",
     "postpack": "rm -f oclif.manifest.json",
-    "posttest": "yarn lint",
+    "posttest": "pnpm run lint",
     "prepack": "oclif manifest && oclif readme",
-    "prepare": "yarn build",
+    "prepare": "pnpm run build",
     "lint": "eslint . --ext .ts",
     "test": "mocha --forbid-only \"test/**/*.test.ts\""
   },
@@ -59,10 +59,6 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
-  "license": "MIT",
-  "packageManager": "yarn@4.9.4"
+  "packageManager": "pnpm@10.17.1",
+  "license": "MIT"
 }

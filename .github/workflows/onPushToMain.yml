@@ -14,14 +14,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'pnpm'
           registry-url: https://registry.npmjs.org
-
-      - name: Enable Corepack
-        run: corepack enable yarn
 
       - name: Check if version already exists
         id: version-check
@@ -51,9 +52,9 @@ jobs:
       - name: Build & generate oclif README
         if: ${{ steps.version-check.outputs.skipped == 'false' }}
         run: |
-          yarn install
-          yarn build
-          yarn prepack
+          pnpm install --frozen-lockfile
+          pnpm run build
+          pnpm run prepack
           if [ -n "$(git status --porcelain)" ]; then
             git add .
             git commit -am "chore: update README.md"
@@ -62,7 +63,7 @@ jobs:
 
       - name: Publish to NPM
         if: ${{ steps.version-check.outputs.skipped == 'false' }}
-        run: yarn npm publish --access public
+        run: pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -75,8 +76,8 @@ jobs:
       - name: Pack tarballs & generate oclif README
         if: ${{ steps.version-check.outputs.skipped == 'false' }}
         run: |
-          yarn oclif pack tarballs -r .
-          yarn postpack
+          pnpm exec oclif pack tarballs -r .
+          pnpm run postpack
 
       - name: Create Github Release
         uses: ncipollo/release-action@v1
