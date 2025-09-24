@@ -62,7 +62,7 @@ jobs:
 
       - name: Publish to NPM
         if: ${{ steps.version-check.outputs.skipped == 'false' }}
-        run: yarn publish --non-interactive
+        run: yarn npm publish --access public --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
