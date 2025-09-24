@@ -42,38 +42,33 @@ export class BrunoCollectionFileGenerator {
         const content = await fs.readFile(this.collectionFilePath, 'utf-8');
         const collection = collectionBruToJson(content);
 
-        // script does not exist, add a whole new script
+        const req = await this.generatePreRequestScript(secretsPath);
+
+        // script does not exist, add new script
         if (!collection.script) {
-            collection.script = { req: await this.generatePreRequestScript(secretsPath) };
+            collection.script = { req };
             return collection;
         }
 
         // script exist but req does not exist, add req only
         if (!collection.script.req) {
-            collection.script.req = await this.generatePreRequestScript(secretsPath);
+            collection.script.req = req;
             return collection;
         }
 
-        // pre-request script exist, merge scripts
+        // both script and req exist, modify script.req
         console.warn(chalk.yellow('⚠️ WARNING: Pre-request script already exists!'));
         console.warn(
             chalk.yellow(`   Please review the modifications at: ${this.collectionFilePath}`)
         );
 
-        collection.script.req = this.mergePreRequestScripts(
-            collection.script.req,
-            await this.generatePreRequestScript(secretsPath)
-        );
-
+        collection.script.req = this.mergePreRequestScripts(collection.script.req, req);
         return collection;
     }
 
     private mergePreRequestScripts(existing: string, newScript: string): string {
-        if (!existing.includes(this.startMarker)) {
-            return [this.startMarker, newScript, this.endMarker, existing].join('\n');
-        }
-
-        return existing;
+        // if existing script already has the start marker, do not update
+        return existing.includes(this.startMarker) ? existing : [newScript, existing].join('\n');
     }
 
     private async generatePreRequestScript(secretConfigPath: string) {
