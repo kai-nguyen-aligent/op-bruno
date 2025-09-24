@@ -47,8 +47,6 @@ export class BrunoCollectionFileGenerator {
 
         const req = await this.generatePreRequestScript(secretsPath);
 
-        console.log('REQ:', req.split('\n'));
-
         // script does not exist, add new script
         if (!collection.script) {
             collection.script = { req };
@@ -73,7 +71,7 @@ export class BrunoCollectionFileGenerator {
             this.command.error('Malformed pre-request script');
         }
 
-        collection.script.req = mergedReq;
+        collection.script.req = mergedReq.trimEnd();
         return collection;
     }
 
@@ -88,11 +86,7 @@ export class BrunoCollectionFileGenerator {
         }
 
         if (startIndex < endIndex) {
-            const notSecretManagementLines = lines.splice(startIndex, endIndex - startIndex + 1);
-
-            console.log('Removed lines:', notSecretManagementLines);
-            console.log('Remaining lines:', lines);
-
+            lines.splice(startIndex, endIndex - startIndex + 1);
             return [newScript, lines.join('\n')].join('\n');
         }
 
@@ -102,10 +96,12 @@ export class BrunoCollectionFileGenerator {
     private async generatePreRequestScript(secretConfigPath: string) {
         const templatePath = path.resolve(import.meta.dirname, this.templatePath);
         const template = await fs.readFile(templatePath, 'utf-8');
-        return ejs.render(template, {
+        const result = ejs.render(template, {
             secretConfigPath,
             startMarker: this.startMarker,
             endMarker: this.endMarker,
         });
+
+        return result.trimEnd();
     }
 }
