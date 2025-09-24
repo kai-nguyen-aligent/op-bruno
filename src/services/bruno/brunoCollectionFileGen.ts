@@ -8,7 +8,7 @@ import path from 'path';
 export class BrunoCollectionFileGenerator {
     private readonly startMarker = '// === START: 1Password Secret Management ===';
     private readonly endMarker = '// === END: 1Password Secret Management ===';
-    private readonly templatePath = '../../templates/preRequestTemplate.js';
+    private readonly templatePath = '../../templates/preRequest.template';
 
     private readonly collectionFilePath: string;
     private readonly command: Command;
@@ -40,12 +40,14 @@ export class BrunoCollectionFileGenerator {
     }
 
     async modifyExistingCollection(secretsPath: string) {
-        this.command.log(chalk.blue('ℹ️ Modifying existing collection.bru'));
+        this.command.log(chalk.blue('ℹ️  Modifying existing collection.bru'));
 
         const content = await fs.readFile(this.collectionFilePath, 'utf-8');
         const collection = collectionBruToJson(content);
 
         const req = await this.generatePreRequestScript(secretsPath);
+
+        console.log('REQ:', req.split('\n'));
 
         // script does not exist, add new script
         if (!collection.script) {
@@ -86,8 +88,12 @@ export class BrunoCollectionFileGenerator {
         }
 
         if (startIndex < endIndex) {
-            const notSecretManagementLines = lines.splice(startIndex, endIndex - startIndex);
-            return [newScript, notSecretManagementLines.join('\n')].join('\n');
+            const notSecretManagementLines = lines.splice(startIndex, endIndex - startIndex + 1);
+
+            console.log('Removed lines:', notSecretManagementLines);
+            console.log('Remaining lines:', lines);
+
+            return [newScript, lines.join('\n')].join('\n');
         }
 
         return null;
