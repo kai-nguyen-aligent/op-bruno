@@ -1,3 +1,4 @@
+import { Command } from '@oclif/core';
 import { Collection, collectionBruToJson, jsonToCollectionBru } from '@usebruno/lang';
 import chalk from 'chalk';
 import ejs from 'ejs';
@@ -9,10 +10,12 @@ export class BrunoCollectionFileGenerator {
     private readonly endMarker = '// === END: 1Password Secret Management ===';
     private readonly templatePath = '../../templates/preRequestTemplate.js';
 
-    private collectionFilePath: string;
+    private readonly collectionFilePath: string;
+    private readonly command: Command;
 
-    constructor(collectionDir: string) {
+    constructor(collectionDir: string, command: Command) {
         this.collectionFilePath = path.join(collectionDir, 'collection.bru');
+        this.command = command;
     }
 
     async upsertCollection(secretsPath: string) {
@@ -27,7 +30,7 @@ export class BrunoCollectionFileGenerator {
     }
 
     async createNewCollection(secretsPath: string) {
-        console.log(chalk.blue('ℹ️ Creating new collection.bru'));
+        this.command.log(chalk.blue('ℹ️ Creating new collection.bru'));
 
         const collection: Collection = {
             script: { req: await this.generatePreRequestScript(secretsPath) },
@@ -37,7 +40,7 @@ export class BrunoCollectionFileGenerator {
     }
 
     async modifyExistingCollection(secretsPath: string) {
-        console.log(chalk.blue('ℹ️ Modifying existing collection.bru'));
+        this.command.log(chalk.blue('ℹ️ Modifying existing collection.bru'));
 
         const content = await fs.readFile(this.collectionFilePath, 'utf-8');
         const collection = collectionBruToJson(content);
@@ -57,23 +60,46 @@ export class BrunoCollectionFileGenerator {
         }
 
         // both script and req exist, modify script.req
-        console.warn(chalk.yellow('⚠️ WARNING: Pre-request script already exists!'));
-        console.warn(
+        this.command.warn(chalk.yellow('⚠️ WARNING: Pre-request script already exists!'));
+        this.command.warn(
             chalk.yellow(`   Please review the modifications at: ${this.collectionFilePath}`)
         );
 
-        collection.script.req = this.mergePreRequestScripts(collection.script.req, req);
+        const mergedReq = this.mergePreRequestScripts(collection.script.req, req);
+
+        if (!mergedReq) {
+            this.command.error('Malformed pre-request script');
+        }
+
+        collection.script.req = mergedReq;
         return collection;
     }
 
-    private mergePreRequestScripts(existing: string, newScript: string): string {
-        // if existing script already has the start marker, do not update
-        return existing.includes(this.startMarker) ? existing : [newScript, existing].join('\n');
+    private mergePreRequestScripts(existing: string, newScript: string) {
+        const lines = existing.split('\n');
+
+        const startIndex = lines.findIndex(line => line.trim() === this.startMarker);
+        const endIndex = lines.findIndex(line => line.trim() === this.endMarker);
+
+        if (startIndex < 0 && endIndex < 0) {
+            return [newScript, existing].join('\n');
+        }
+
+        if (startIndex < endIndex) {
+            const notSecretManagementLines = lines.splice(startIndex, endIndex - startIndex);
+            return [newScript, notSecretManagementLines.join('\n')].join('\n');
+        }
+
+        return null;
     }
 
     private async generatePreRequestScript(secretConfigPath: string) {
         const templatePath = path.resolve(import.meta.dirname, this.templatePath);
         const template = await fs.readFile(templatePath, 'utf-8');
-        return ejs.render(template, { secretConfigPath });
+        return ejs.render(template, {
+            secretConfigPath,
+            startMarker: this.startMarker,
+            endMarker: this.endMarker,
+        });
     }
 }

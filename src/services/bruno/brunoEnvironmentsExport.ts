@@ -1,6 +1,7 @@
+import { bruToEnvJsonV2 } from '@usebruno/lang';
 import fs from 'fs-extra';
 import path from 'path';
-import { BrunoEnvironment, BrunoVariable } from '../../types/index.js';
+import { BrunoEnvironments } from '../../types/index.js';
 
 export class BrunoEnvironmentsExport {
     private environmentsPath: string;
@@ -13,7 +14,11 @@ export class BrunoEnvironmentsExport {
         this.item = item;
     }
 
-    async parseEnvironments(): Promise<BrunoEnvironment[]> {
+    private generateVaultRef(envName: string, varName: string) {
+        return `op://${this.vault}/${this.item}/${envName}/${varName}`;
+    }
+
+    async parseEnvironments(): Promise<BrunoEnvironments> {
         if (!(await fs.pathExists(this.environmentsPath))) {
             throw new Error(`No environments directory found at ${this.environmentsPath}`);
         }
@@ -21,90 +26,24 @@ export class BrunoEnvironmentsExport {
         const files = await fs.readdir(this.environmentsPath);
         const bruFiles = files.filter(f => f.endsWith('.bru'));
 
-        const environments: BrunoEnvironment[] = [];
+        const environments: BrunoEnvironments = {};
 
         for (const file of bruFiles) {
             const filePath = path.join(this.environmentsPath, file);
+            const envName = path.basename(file, '.bru');
             const content = await fs.readFile(filePath, 'utf-8');
-            const env = this.parseEnvironmentFile(content, path.basename(file, '.bru'));
-            environments.push(env);
+
+            const variables = bruToEnvJsonV2(content).variables;
+            const secrets = variables
+                .filter(variable => variable.secret)
+                .map(secret => ({
+                    ...secret,
+                    value: this.generateVaultRef(envName, secret.name),
+                }));
+
+            environments[envName] = secrets;
         }
 
         return environments;
-    }
-
-    private constructSecretVaultReference(envName: string, varName: string) {
-        return `op://${this.vault}/${this.item}/${envName}/${varName}`;
-    }
-
-    private parseEnvironmentFile(content: string, envName: string): BrunoEnvironment {
-        const lines = content.split('\n');
-        const variables: BrunoVariable[] = [];
-
-        let inVarSection = false;
-        let inSecretSection = false;
-
-        for (const line of lines) {
-            const trimmed = line.trim();
-
-            if (trimmed === 'vars {') {
-                inVarSection = true;
-                continue;
-            }
-
-            if (trimmed === '}' && inVarSection) {
-                inVarSection = false;
-                continue;
-            }
-
-            if (trimmed === 'vars:secret [') {
-                inSecretSection = true;
-                continue;
-            }
-
-            if (trimmed === ']' && inSecretSection) {
-                inSecretSection = false;
-                continue;
-            }
-
-            if (inVarSection || inSecretSection) {
-                // Parse variable line
-                const item = trimmed.replaceAll(',', '').replaceAll('~', '');
-                const [varName, varValue] = item.split(':');
-
-                if (varName) {
-                    const value = inVarSection
-                        ? varValue
-                        : this.constructSecretVaultReference(envName, varName);
-
-                    variables.push({
-                        name: varName,
-                        value,
-                        isSecret: inSecretSection,
-                        enabled: trimmed.startsWith('~'),
-                    });
-                }
-            }
-        }
-
-        return {
-            name: envName,
-            variables,
-        };
-    }
-
-    async collectSecrets() {
-        const environments = await this.parseEnvironments();
-        const secretMap = new Map<string, BrunoVariable[]>();
-
-        for (const env in Object.keys(environments)) {
-            const secrets = environments[env]?.variables?.filter(val => val.isSecret);
-
-            if (secrets) {
-                secretMap.set(env, secrets);
-            }
-        }
-
-        return secretMap;
     }
 }

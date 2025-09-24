@@ -59,41 +59,41 @@ export default class Sync extends Command {
         this.log(chalk.blue(`📝 Output file: ${outPath}\n`));
 
         try {
-            const configManager = new BrunoConfigManager(brunoDir);
+            const configManager = new BrunoConfigManager(brunoDir, this);
             const name = await configManager.getName();
 
             const { '1password': upsert1PasswordItem, outName, title = name, vault } = flags;
 
             this.debug(chalk.bold('Step 1: Extracting secrets from Bruno environments...'));
             const exporter = new BrunoEnvironmentsExport(brunoDir, vault, title);
-            const secrets = await exporter.collectSecrets();
+            const environments = await exporter.parseEnvironments();
 
-            if (secrets.size === 0) {
-                this.warn(chalk.yellow('⚠️ No secrets found in Bruno environment files'));
+            if (Object.keys(environments).length === 0) {
+                this.warn(chalk.yellow('⚠️ No environments found in Bruno collection'));
+                return;
+            }
+
+            const hasSecretEnv = Object.keys(environments).filter(
+                env => environments[env] && environments[env].length > 0
+            );
+
+            if (!hasSecretEnv.length) {
+                this.warn(chalk.yellow('⚠️ None of the environments found has secret'));
                 return;
             }
 
             this.debug(chalk.bold('\nStep 2: Exporting secrets to JSON...'));
-            const secretsObj = Object.fromEntries(secrets);
-            await fs.writeFile(outPath, JSON.stringify(secretsObj, null, 2));
+            await fs.writeFile(outPath, JSON.stringify(environments, null, 2));
 
             this.debug(chalk.bold('\nStep 3: Updating bruno.json...'));
             await configManager.updateConfig();
 
             if (upsert1PasswordItem) {
                 this.debug(chalk.bold('\nStep 4: Creating/updating 1Password item...'));
-                const opManager = new OnePasswordManager();
-                const isVaultAccessible = opManager.verifyAccess(vault);
+                const opManager = new OnePasswordManager(this);
+                opManager.verifyAccess(vault);
 
-                if (isVaultAccessible) {
-                    const id = opManager.upsertItem(secrets, { vault, title });
-
-                    if (!id) {
-                        this.error(
-                            `Failed to create/update 1Password item ${title} in vault ${vault}`
-                        );
-                    }
-                }
+                opManager.upsertItem(environments, { vault, title });
             } else {
                 this.log(
                     chalk.gray(
@@ -103,7 +103,7 @@ export default class Sync extends Command {
             }
 
             this.log(chalk.bold('\nStep 5: Updating collection.bru with pre-request script...'));
-            const collectionGen = new BrunoCollectionFileGenerator(brunoDir);
+            const collectionGen = new BrunoCollectionFileGenerator(brunoDir, this);
             await collectionGen.upsertCollection(outName);
 
             // Success summary
@@ -111,7 +111,7 @@ export default class Sync extends Command {
             this.log(chalk.green('Summary:'));
             this.log(
                 chalk.green(
-                    `  • Extracted secrets from ${Object.keys(secrets).length} environment(s)`
+                    `  • Extracted secrets from ${Object.keys(environments).length} environment(s)`
                 )
             );
             this.log(chalk.green(`  • Exported secrets to ${outPath}`));

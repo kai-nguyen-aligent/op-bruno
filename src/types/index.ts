@@ -1,14 +1,6 @@
-export interface BrunoEnvironment {
-    name: string;
-    variables: BrunoVariable[];
-}
+import type { Variable } from '@usebruno/lang';
 
-export interface BrunoVariable {
-    name: string;
-    value: string | undefined;
-    enabled: boolean;
-    isSecret: boolean;
-}
+export type BrunoEnvironments = Record<string, Variable[]>;
 
 export type BrunoConfig = Record<string, unknown> & {
     name: string;

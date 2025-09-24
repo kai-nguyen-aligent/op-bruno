@@ -1,4 +1,4 @@
-// === START: 1Password Secret Management ===
+<%= startMarker %>
 // Auto-generated script to fetch secrets from 1Password
 // Secret Configuration Path: <%= secretConfigPath %>
 
@@ -46,4 +46,4 @@ async function fetchSecretsFrom1Password() {
 // Execute the function
 await fetchSecretsFrom1Password();
 
-// === END: 1Password Secret Management ===
+<%= endMarker %>

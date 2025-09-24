@@ -1,14 +1,17 @@
+import { Command } from '@oclif/core';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { BrunoConfig } from '../../types/index.js';
 
 export class BrunoConfigManager {
-    private configPath: string;
-    private requiredModules = ['child_process', 'fs'];
+    private readonly configPath: string;
+    private readonly requiredModules = ['child_process', 'fs'];
+    private readonly command: Command;
 
-    constructor(collectionDir: string) {
+    constructor(collectionDir: string, command: Command) {
         this.configPath = path.join(collectionDir, 'bruno.json');
+        this.command = command;
     }
 
     private async getConfig(): Promise<BrunoConfig> {
@@ -40,6 +43,6 @@ export class BrunoConfigManager {
         config.scripts = { moduleWhitelist, filesystemAccess: { allow: true } };
         await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), 'utf-8');
 
-        console.log(chalk.green('✓ Enabled filesystem access in bruno.json'));
+        this.command.log(chalk.green('✓ Enabled filesystem access in bruno.json'));
     }
 }
