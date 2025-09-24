@@ -59,7 +59,7 @@ $ npm install -g op-bruno
 $ op-bruno COMMAND
 running command...
 $ op-bruno (--version)
-op-bruno/0.0.1 darwin-arm64 node-v20.18.3
+op-bruno/0.0.1 linux-x64 node-v20.19.5
 $ op-bruno --help [COMMAND]
 USAGE
   $ op-bruno COMMAND
