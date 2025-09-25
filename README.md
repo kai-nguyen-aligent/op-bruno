@@ -59,7 +59,7 @@ $ npm install -g op-bruno
 $ op-bruno COMMAND
 running command...
 $ op-bruno (--version)
-op-bruno/0.0.3 linux-x64 node-v20.19.5
+op-bruno/0.0.4 linux-x64 node-v20.19.5
 $ op-bruno --help [COMMAND]
 USAGE
   $ op-bruno COMMAND
@@ -117,12 +117,12 @@ DESCRIPTION
   Extract secrets from Bruno environment files and sync with 1Password
 
 EXAMPLES
-  $ op-bruno sync ./bruno-project -o secrets.yml
+  $ op-bruno sync ./bruno-project -o secrets.json
 
-  $ op-bruno sync ./bruno-project -o secrets.yml --1password --vault Engineering --title "API Secrets" --category API
+  $ op-bruno sync ./bruno-project -o secrets.json --vault Engineering --title "API Secrets" --1password
 ```
 
-_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v0.0.3/src/commands/sync.ts)_
+_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v0.0.4/src/commands/sync.ts)_
 <!-- commandsstop -->
 
 # How It Works
