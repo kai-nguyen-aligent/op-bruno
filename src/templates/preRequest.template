@@ -19,7 +19,7 @@ async function fetchSecretsFrom1Password() {
         }
 
         const config = JSON.parse(readFileSync(configPath, 'utf8'));
-        const secrets = config[env];
+        const secrets = config[env.toLowerCase()];
 
         if (!secrets) {
             throw new Error(`No secrets found for ${env} environment`);

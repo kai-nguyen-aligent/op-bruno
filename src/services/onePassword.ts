@@ -1,10 +1,13 @@
 import * as op from '@1password/op-js';
 import { PrettyPrintableError } from '@oclif/core/interfaces';
+import path from 'path';
 import { BaseCommand } from '../base-command.js';
 import Sync from '../commands/sync.js';
-import { BrunoEnvironments, OnePasswordOptions, OnePasswordTemplate } from '../types/index.js';
+import { BrunoEnvironments, OnePasswordOptions } from '../types/index.js';
 
 export class OnePasswordManager {
+    private readonly templatePath = '../templates/onePasswordItemTemplate.json';
+
     private readonly command: BaseCommand<typeof Sync>;
 
     constructor(command: BaseCommand<typeof Sync>) {
@@ -17,7 +20,11 @@ export class OnePasswordManager {
         Object.keys(environments).forEach(env => {
             const envVars = environments[env];
             const fields: op.FieldAssignment[] | undefined = envVars?.map(v => {
-                return [`${env}/${v.name}`, 'concealed', 'to-be-replaced-with-real-secret'];
+                return [
+                    `${env.toLowerCase()}.${v.name}`,
+                    'concealed',
+                    'to-be-replaced-with-real-secret',
+                ];
             });
 
             if (fields) {
@@ -42,30 +49,13 @@ export class OnePasswordManager {
 
     private createItem(environments: BrunoEnvironments, options: OnePasswordOptions) {
         const { vault, title } = options;
-        this.command.info(`Creating 1Password item: ${title} in vault: ${vault}`);
-
-        const template: OnePasswordTemplate = {
-            title,
-            category: 'API_CREDENTIAL',
-            fields: [
-                {
-                    id: 'notesPlain',
-                    label: 'notesPlain',
-                    purpose: 'NOTES',
-                    type: 'STRING',
-                    value: '',
-                },
-            ],
-        };
+        this.command.info(`Creating new 1Password item: "${title}" in vault: "${vault}"`);
 
         try {
             const assignments = this.buildFieldAssignments(environments);
+            const template = path.resolve(import.meta.dirname, this.templatePath);
 
-            const item = op.item.create(assignments, {
-                vault,
-                title,
-                template: JSON.stringify(template),
-            });
+            const item = op.item.create(assignments, { vault, title, template });
 
             this.command.success(`Created 1Password item "${title}" in vault "${vault}"`);
             return item.id;
@@ -80,7 +70,8 @@ export class OnePasswordManager {
     }
 
     private updateItem(environments: BrunoEnvironments, item: op.Item) {
-        this.command.info(`Updating 1Password item ${item.title} in vault ${item.vault.name}`);
+        const { title, vault } = item;
+        this.command.info(`Updating 1Password item ${title} in vault ${vault.name}`);
         // TODO: remove fields in the item????
 
         try {
@@ -88,9 +79,7 @@ export class OnePasswordManager {
 
             const { id } = op.item.edit(item.id, assignments);
 
-            this.command.success(
-                `Created 1Password item "${item.title}" in vault "${item.vault.name}"`
-            );
+            this.command.success(`Updated 1Password item "${title}" in vault "${vault.name}"`);
             return id;
         } catch (err) {
             this.command.failed((err as Error).message);
@@ -103,14 +92,31 @@ export class OnePasswordManager {
     }
 
     upsertItem(environments: BrunoEnvironments, options: OnePasswordOptions) {
-        this.checkCli();
+        const { title, vault } = options;
 
-        const item = op.item.get(options.title, { vault: options.vault });
+        let item: op.Item | undefined = undefined;
+
+        try {
+            item = op.item.get(title, { vault }) as op.Item;
+        } catch (err) {
+            const isItemNotExistError = (err as Error).message.includes(
+                `"${title}" isn't an item in the "${vault}" vault.`
+            );
+
+            if (!isItemNotExistError) {
+                this.command.failed((err as Error).message);
+                const error: PrettyPrintableError = {
+                    message: `Unable to get item "${title}" in vault "${vault}"`,
+                };
+                throw error;
+            }
+        }
+
         if (!item) {
             return this.createItem(environments, options);
         }
 
-        return this.updateItem(environments, item as op.Item);
+        return this.updateItem(environments, item);
     }
 
     verifyAccess(vault: string) {

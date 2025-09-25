@@ -15,8 +15,8 @@ export default class Sync extends BaseCommand<typeof Sync> {
         'Extract secrets from Bruno environment files and sync with 1Password';
 
     static override examples = [
-        '<%= config.bin %> <%= command.id %> ./bruno-project -o secrets.yml',
-        '<%= config.bin %> <%= command.id %> ./bruno-project -o secrets.yml --1password --vault Engineering --title "API Secrets" --category API',
+        '<%= config.bin %> <%= command.id %> ./bruno-project -o secrets.json',
+        '<%= config.bin %> <%= command.id %> ./bruno-project -o secrets.json --vault Engineering --title "API Secrets" --1password',
     ];
 
     static override args = {
@@ -91,8 +91,8 @@ export default class Sync extends BaseCommand<typeof Sync> {
             if (upsert1PasswordItem) {
                 this.debug(chalk.bold('\nStep 4: Creating/updating 1Password item...'));
                 const opManager = new OnePasswordManager(this);
-                opManager.verifyAccess(vault);
 
+                opManager.verifyAccess(vault);
                 opManager.upsertItem(environments, { vault, title });
             } else {
                 this.skipped('Skipping 1Password item creation (use --1password flag to enable)');
