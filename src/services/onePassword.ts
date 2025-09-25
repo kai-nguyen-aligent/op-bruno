@@ -1,5 +1,5 @@
 import * as op from '@1password/op-js';
-import chalk from 'chalk';
+import { PrettyPrintableError } from '@oclif/core/interfaces';
 import { BaseCommand } from '../base-command.js';
 import Sync from '../commands/sync.js';
 import { BrunoEnvironments, OnePasswordOptions, OnePasswordTemplate } from '../types/index.js';
@@ -29,12 +29,14 @@ export class OnePasswordManager {
     }
 
     private checkCli() {
-        op.validateCli().catch(error => {
-            this.command.error('Unable to access 1Password CLI', {
-                message: error.message,
+        op.validateCli().catch(err => {
+            this.command.failed(err.message);
+            const error: PrettyPrintableError = {
+                message: 'Unable to access 1Password CLI',
                 suggestions: ['Ensure that 1Password CLI is installed'],
                 ref: 'https://developer.1password.com/docs/cli',
-            });
+            };
+            throw error;
         });
     }
 
@@ -67,13 +69,13 @@ export class OnePasswordManager {
 
             this.command.success(`Created 1Password item "${title}" in vault "${vault}"`);
             return item.id;
-        } catch (error) {
-            this.command.error('Failed to create 1Password item', {
-                message: (error as Error).message || 'Unknown error',
-                suggestions: [],
-                ref: '',
-            });
-            return undefined;
+        } catch (err) {
+            this.command.failed((err as Error).message);
+
+            const error: PrettyPrintableError = {
+                message: 'Failed to create 1Password item',
+            };
+            throw error;
         }
     }
 
@@ -90,13 +92,13 @@ export class OnePasswordManager {
                 `Created 1Password item "${item.title}" in vault "${item.vault.name}"`
             );
             return id;
-        } catch (error) {
-            this.command.error('Failed to update 1Password item', {
-                message: (error as Error).message || 'Unknown error',
-                suggestions: [],
-                ref: '',
-            });
-            return undefined;
+        } catch (err) {
+            this.command.failed((err as Error).message);
+
+            const error: PrettyPrintableError = {
+                message: 'Failed to update 1Password item',
+            };
+            throw error;
         }
     }
 
@@ -116,15 +118,18 @@ export class OnePasswordManager {
 
         try {
             op.vault.get(vault);
-        } catch {
-            this.command.logToStderr(chalk.red(`Cannot access vault "${vault}". Please ensure:`));
-            this.command.logToStderr(
-                chalk.yellow('  1. You are signed in to 1Password CLI (run: op signin)')
-            );
-            this.command.logToStderr(
-                chalk.yellow(`  2. The vault "${vault}" exists and you have access to it`)
-            );
-            this.command.error(`Unable to access vault "${vault}"`);
+        } catch (err) {
+            this.command.failed((err as Error).message);
+
+            const error: PrettyPrintableError = {
+                message: `Cannot access vault "${vault}"`,
+                ref: 'https://support.1password.com/category/using-1password/',
+                suggestions: [
+                    'Ensure that you are signed in to 1Password CLI (run: op signin)',
+                    `The vault "${vault}" exists and you have access to it`,
+                ],
+            };
+            throw error;
         }
     }
 }

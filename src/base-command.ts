@@ -7,7 +7,7 @@ export type Flags<T extends typeof Command> = Interfaces.InferredFlags<
 >;
 export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
 
-type ErrorOptions = {
+export type ErrorOptions = {
     code?: string;
     exit?: number | false;
 } & PrettyPrintableError;
@@ -54,15 +54,19 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
         return super.error('', { ...options, exit: options.exit || 2 });
     }
 
+    failed(message: string) {
+        this.log(chalk.red(`💥 ${message}`));
+    }
+
     skipped(message: string): void {
         this.log(chalk.yellow(`⏭️  ${message}`));
     }
 
-    success(message: string): void {
-        this.log(chalk.green(`✅ ${message}`));
-    }
-
     info(message: string): void {
         this.log(chalk.blue(`💡 ${message}`));
+    }
+
+    success(message: string): void {
+        this.log(chalk.green(`✅ ${message}`));
     }
 }

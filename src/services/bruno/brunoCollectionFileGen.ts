@@ -1,3 +1,4 @@
+import { PrettyPrintableError } from '@oclif/core/interfaces';
 import { Collection, collectionBruToJson, jsonToCollectionBru } from '@usebruno/lang';
 import chalk from 'chalk';
 import ejs from 'ejs';
@@ -25,11 +26,6 @@ export class BrunoCollectionFileGenerator {
         const collection = isCollectionFileExist
             ? await this.modifyExistingCollection(secretsPath)
             : await this.createNewCollection(secretsPath);
-
-        if (!collection) {
-            this.command.error('Error while processing collection.bru');
-            return;
-        }
 
         const content = jsonToCollectionBru(collection);
         await fs.writeFile(this.collectionFilePath, content, 'utf-8');
@@ -71,12 +67,13 @@ export class BrunoCollectionFileGenerator {
         const mergedReq = this.mergePreRequestScripts(collection.script.req, req);
 
         if (!mergedReq) {
-            this.command.error('Malformed pre-request script', {
+            const error: PrettyPrintableError = {
+                message: 'Malformed pre-request script',
                 suggestions: [
                     `Please double check your pre-request script at: ${this.collectionFilePath}`,
                 ],
-            });
-            return;
+            };
+            throw error;
         }
 
         collection.script.req = mergedReq.trimEnd();

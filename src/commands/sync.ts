@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import { BaseCommand } from '../base-command.js';
 
+import { PrettyPrintableError } from '@oclif/core/interfaces';
 import { BrunoCollectionFileGenerator } from '../services/bruno/brunoCollectionFileGen.js';
 import { BrunoConfigManager } from '../services/bruno/brunoConfigManager.js';
 import { BrunoEnvironmentsExport } from '../services/bruno/brunoEnvironmentsExport.js';
@@ -130,11 +131,15 @@ export default class Sync extends BaseCommand<typeof Sync> {
                     chalk.cyan('  3. Consider creating a 1Password item with --1password flag')
                 );
             }
-        } catch (error) {
+        } catch (err) {
+            const error = err as Error & PrettyPrintableError;
+
             this.error('Failed Bruno secrets sync', {
-                message: (error as Error).message || 'Unknown error',
-                suggestions: ['Please log an issue on our github repository'],
-                ref: 'https://github.com/kai-nguyen-aligent/op-bruno',
+                message: error.message || 'Unknown error',
+                ref: error.ref ? error.ref : 'https://github.com/kai-nguyen-aligent/op-bruno',
+                suggestions: error.suggestions
+                    ? error.suggestions
+                    : ['Please log an issue on our github repository'],
             });
         }
     }
