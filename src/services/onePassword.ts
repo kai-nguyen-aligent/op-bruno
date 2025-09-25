@@ -1,12 +1,13 @@
 import * as op from '@1password/op-js';
-import { Command } from '@oclif/core';
 import chalk from 'chalk';
+import { BaseCommand } from '../base-command.js';
+import Sync from '../commands/sync.js';
 import { BrunoEnvironments, OnePasswordOptions, OnePasswordTemplate } from '../types/index.js';
 
 export class OnePasswordManager {
-    private readonly command: Command;
+    private readonly command: BaseCommand<typeof Sync>;
 
-    constructor(command: Command) {
+    constructor(command: BaseCommand<typeof Sync>) {
         this.command = command;
     }
 
@@ -29,17 +30,17 @@ export class OnePasswordManager {
 
     private checkCli() {
         op.validateCli().catch(error => {
-            this.command.warn(chalk.yellow('⚠️ Unable to access 1Password CLI:', error));
-            this.command.warn(
-                chalk.yellow('⚠️ Please install it from: https://developer.1password.com/docs/cli')
-            );
-            this.command.error('Unable to access 1Password CLI');
+            this.command.error('Unable to access 1Password CLI', {
+                message: error.message,
+                suggestions: ['Ensure that 1Password CLI is installed'],
+                ref: 'https://developer.1password.com/docs/cli',
+            });
         });
     }
 
     private createItem(environments: BrunoEnvironments, options: OnePasswordOptions) {
         const { vault, title } = options;
-        this.command.log(chalk.blue(`📝 Creating 1Password item: ${title} in vault: ${vault}`));
+        this.command.info(`Creating 1Password item: ${title} in vault: ${vault}`);
 
         const template: OnePasswordTemplate = {
             title,
@@ -64,20 +65,20 @@ export class OnePasswordManager {
                 template: JSON.stringify(template),
             });
 
-            this.command.log(
-                chalk.green(`✓ Created 1Password item "${title}" in vault "${vault}"`)
-            );
+            this.command.success(`Created 1Password item "${title}" in vault "${vault}"`);
             return item.id;
         } catch (error) {
-            this.command.logToStderr('Failed to create 1Password item:', error);
-            this.command.error(chalk.red('Failed to create 1Password item'));
+            this.command.error('Failed to create 1Password item', {
+                message: (error as Error).message || 'Unknown error',
+                suggestions: [],
+                ref: '',
+            });
+            return undefined;
         }
     }
 
     private updateItem(environments: BrunoEnvironments, item: op.Item) {
-        this.command.log(
-            chalk.blue(`📝 Updating 1Password item ${item.title} in vault ${item.vault.name}`)
-        );
+        this.command.info(`Updating 1Password item ${item.title} in vault ${item.vault.name}`);
         // TODO: remove fields in the item????
 
         try {
@@ -85,15 +86,17 @@ export class OnePasswordManager {
 
             const { id } = op.item.edit(item.id, assignments);
 
-            this.command.log(
-                chalk.green(
-                    `✓ Updated 1Password item "${item.title}" in vault "${item.vault.name}"`
-                )
+            this.command.success(
+                `Created 1Password item "${item.title}" in vault "${item.vault.name}"`
             );
             return id;
         } catch (error) {
-            this.command.logToStderr('Failed to update 1Password item:', error);
-            this.command.error(chalk.red('Failed to update 1Password item'));
+            this.command.error('Failed to update 1Password item', {
+                message: (error as Error).message || 'Unknown error',
+                suggestions: [],
+                ref: '',
+            });
+            return undefined;
         }
     }
 

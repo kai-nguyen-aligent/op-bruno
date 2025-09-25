@@ -1,14 +1,15 @@
-import { Args, Command, Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
+import { BaseCommand } from '../base-command.js';
 
 import { BrunoCollectionFileGenerator } from '../services/bruno/brunoCollectionFileGen.js';
 import { BrunoConfigManager } from '../services/bruno/brunoConfigManager.js';
 import { BrunoEnvironmentsExport } from '../services/bruno/brunoEnvironmentsExport.js';
 import { OnePasswordManager } from '../services/onePassword.js';
 
-export default class Sync extends Command {
+export default class Sync extends BaseCommand<typeof Sync> {
     static override description =
         'Extract secrets from Bruno environment files and sync with 1Password';
 
@@ -43,8 +44,6 @@ export default class Sync extends Command {
 
     async run(): Promise<void> {
         const { args, flags } = await this.parse(Sync);
-
-        // Resolve Bruno directory path
         const brunoDir = path.resolve(process.cwd(), args.collection);
 
         // Validate Bruno directory
@@ -69,7 +68,7 @@ export default class Sync extends Command {
             const environments = await exporter.parseEnvironments();
 
             if (Object.keys(environments).length === 0) {
-                this.warn(chalk.yellow('⚠️ No environments found in Bruno collection'));
+                this.warn('No environments found in Bruno collection');
                 return;
             }
 
@@ -78,7 +77,7 @@ export default class Sync extends Command {
             );
 
             if (!hasSecretEnv.length) {
-                this.warn(chalk.yellow('⚠️ None of the environments found has secret'));
+                this.warn('None of the environments found has secret');
                 return;
             }
 
@@ -95,19 +94,15 @@ export default class Sync extends Command {
 
                 opManager.upsertItem(environments, { vault, title });
             } else {
-                this.log(
-                    chalk.gray(
-                        '\nStep 4: Skipping 1Password item creation (use --1password flag to enable)'
-                    )
-                );
+                this.skipped('Skipping 1Password item creation (use --1password flag to enable)');
             }
 
-            this.log(chalk.bold('\nStep 5: Updating collection.bru with pre-request script...'));
+            this.debug(chalk.bold('\nStep 5: Updating collection.bru with pre-request script...'));
             const collectionGen = new BrunoCollectionFileGenerator(brunoDir, this);
             await collectionGen.upsertCollection(outName);
 
             // Success summary
-            this.log(chalk.bold.green('\n✅ Successfully completed Bruno secrets sync!\n'));
+            this.log(chalk.bold.green('\n🏁 Completed Bruno secrets sync!'));
             this.log(chalk.green('Summary:'));
             this.log(
                 chalk.green(
@@ -115,7 +110,9 @@ export default class Sync extends Command {
                 )
             );
             this.log(chalk.green(`  • Exported secrets to ${outPath}`));
-            this.log(chalk.green(`  • Enabled filesystem access in bruno.json`));
+            this.log(
+                chalk.green(`  • Whitelisted modules and enabled filesystem access in bruno.json`)
+            );
             this.log(chalk.green(`  • Updated collection.bru with pre-request script`));
 
             if (upsert1PasswordItem) {
@@ -124,7 +121,7 @@ export default class Sync extends Command {
                 );
             }
 
-            this.log(chalk.cyan('\n📌 Next steps:'));
+            this.info('Next steps:');
             this.log(chalk.cyan('  1. Review the generated files'));
             this.log(chalk.cyan('  2. Test the pre-request script in Bruno'));
 
@@ -134,7 +131,11 @@ export default class Sync extends Command {
                 );
             }
         } catch (error) {
-            this.error(`Failed to extract secrets: ${error}`);
+            this.error('Failed Bruno secrets sync', {
+                message: (error as Error).message || 'Unknown error',
+                suggestions: ['Please log an issue on our github repository'],
+                ref: 'https://github.com/kai-nguyen-aligent/op-bruno',
+            });
         }
     }
 }

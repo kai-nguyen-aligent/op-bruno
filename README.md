@@ -59,7 +59,7 @@ $ npm install -g op-bruno
 $ op-bruno COMMAND
 running command...
 $ op-bruno (--version)
-op-bruno/0.0.2 linux-x64 node-v20.19.5
+op-bruno/0.0.2 darwin-arm64 node-v20.18.3
 $ op-bruno --help [COMMAND]
 USAGE
   $ op-bruno COMMAND
@@ -99,7 +99,7 @@ Extract secrets from Bruno environment files and sync with 1Password
 
 ```
 USAGE
-  $ op-bruno sync COLLECTION [--vault <value>] [--title <value>] [--outName <value>] [--1password]
+  $ op-bruno sync COLLECTION [--json] [--vault <value>] [--title <value>] [--outName <value>] [--1password]
 
 ARGUMENTS
   COLLECTION  Path to Bruno collection directory
@@ -109,6 +109,9 @@ FLAGS
   --outName=<value>  [default: op-secrets.json] JSON output file name
   --title=<value>    1Password item title
   --vault=<value>    [default: Employee] 1Password vault name
+
+GLOBAL FLAGS
+  --json  Format output as json.
 
 DESCRIPTION
   Extract secrets from Bruno environment files and sync with 1Password
