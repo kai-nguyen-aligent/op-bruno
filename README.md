@@ -59,7 +59,7 @@ $ npm install -g op-bruno
 $ op-bruno COMMAND
 running command...
 $ op-bruno (--version)
-op-bruno/0.0.5 linux-x64 node-v20.19.5
+op-bruno/0.0.6 linux-x64 node-v20.19.5
 $ op-bruno --help [COMMAND]
 USAGE
   $ op-bruno COMMAND
@@ -95,34 +95,35 @@ _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v6.2.3
 
 ## `op-bruno sync COLLECTION`
 
-Extract secrets from Bruno environment files and sync with 1Password
+Extract secrets from Bruno environment files and generate pre-request script for fetching from 1Password
 
 ```
 USAGE
-  $ op-bruno sync COLLECTION [--json] [--vault <value>] [--title <value>] [--outName <value>] [--1password]
+  $ op-bruno sync COLLECTION [--json] [--outName <value>] [--vault <value>] [--title <value>]
+    [--upsertItem]
 
 ARGUMENTS
   COLLECTION  Path to Bruno collection directory
 
 FLAGS
-  --1password        Create or Update 1Password item
   --outName=<value>  [default: op-secrets.json] JSON output file name
   --title=<value>    1Password item title
+  --upsertItem       Create or Update 1Password item
   --vault=<value>    [default: Employee] 1Password vault name
 
 GLOBAL FLAGS
   --json  Format output as json.
 
 DESCRIPTION
-  Extract secrets from Bruno environment files and sync with 1Password
+  Extract secrets from Bruno environment files and generate pre-request script for fetching from 1Password
 
 EXAMPLES
-  $ op-bruno sync ./bruno-project -o secrets.json
+  $ op-bruno sync ./bruno-collection --outName secrets.json
 
-  $ op-bruno sync ./bruno-project -o secrets.json --vault Engineering --title "API Secrets" --1password
+  $ op-bruno sync ./bruno-collection --outName secrets.json --vault Engineering --title "API Secrets" --upsertItem
 ```
 
-_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v0.0.5/src/commands/sync.ts)_
+_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v0.0.6/src/commands/sync.ts)_
 <!-- commandsstop -->
 
 # How It Works
