@@ -1,6 +1,7 @@
 import { PrettyPrintableError } from '@oclif/core/interfaces';
 import { Collection, collectionBruToJson, jsonToCollectionBru } from '@usebruno/lang';
 import chalk from 'chalk';
+import { execSync } from 'child_process';
 import ejs from 'ejs';
 import fs from 'fs-extra';
 import path from 'path';
@@ -103,8 +104,12 @@ export class BrunoCollectionFileGenerator {
     private async generatePreRequestScript(secretConfigPath: string) {
         const templatePath = path.resolve(import.meta.dirname, this.templatePath);
         const template = await fs.readFile(templatePath, 'utf-8');
+
+        const onePasswordBin = execSync('which op').toString().trim();
+
         const result = ejs.render(template, {
             secretConfigPath,
+            onePasswordBin,
             startMarker: this.startMarker,
             endMarker: this.endMarker,
         });
