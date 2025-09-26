@@ -12,11 +12,11 @@ import { OnePasswordManager } from '../services/onePassword.js';
 
 export default class Sync extends BaseCommand<typeof Sync> {
     static override description =
-        'Extract secrets from Bruno environment files and sync with 1Password';
+        'Extract secrets from Bruno environment files and generate pre-request script for fetching from 1Password';
 
     static override examples = [
-        '<%= config.bin %> <%= command.id %> ./bruno-project -o secrets.json',
-        '<%= config.bin %> <%= command.id %> ./bruno-project -o secrets.json --vault Engineering --title "API Secrets" --1password',
+        '<%= config.bin %> <%= command.id %> ./bruno-collection --outName secrets.json',
+        '<%= config.bin %> <%= command.id %> ./bruno-collection --outName secrets.json --vault Engineering --title "API Secrets" --upsertItem',
     ];
 
     static override args = {
@@ -27,17 +27,17 @@ export default class Sync extends BaseCommand<typeof Sync> {
     };
 
     static override flags = {
-        vault: Flags.string({ description: '1Password vault name', default: 'Employee' }),
-        title: Flags.string({
-            description: '1Password item title',
-            defaultHelp: 'Default to collection name',
-        }),
         outName: Flags.string({
             description: 'JSON output file name',
             default: 'op-secrets.json',
             defaultHelp: 'The file will be saved in collection dir',
         }),
-        '1password': Flags.boolean({
+        vault: Flags.string({ description: '1Password vault name', default: 'Employee' }),
+        title: Flags.string({
+            description: '1Password item title',
+            defaultHelp: 'Default to collection name',
+        }),
+        upsertItem: Flags.boolean({
             description: 'Create or Update 1Password item',
             default: false,
         }),
@@ -62,7 +62,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
             const configManager = new BrunoConfigManager(brunoDir, this);
             const name = await configManager.getName();
 
-            const { '1password': upsert1PasswordItem, outName, title = name, vault } = flags;
+            const { outName, title = name, vault, upsertItem } = flags;
 
             this.debug(chalk.bold('Step 1: Extracting secrets from Bruno environments...'));
             const exporter = new BrunoEnvironmentsExport(brunoDir, vault, title);
@@ -88,7 +88,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
             this.debug(chalk.bold('\nStep 3: Updating bruno.json...'));
             await configManager.updateConfig();
 
-            if (upsert1PasswordItem) {
+            if (upsertItem) {
                 this.debug(chalk.bold('\nStep 4: Creating/updating 1Password item...'));
                 const opManager = new OnePasswordManager(this);
 
@@ -103,20 +103,16 @@ export default class Sync extends BaseCommand<typeof Sync> {
             await collectionGen.upsertCollection(outName);
 
             // Success summary
-            this.log(chalk.bold.green('\n🏁 Completed Bruno secrets sync!'));
+            this.log(chalk.bold.green('\n🏁 Completed Bruno secrets sync!\n'));
             this.log(chalk.green('Summary:'));
-            this.log(
-                chalk.green(
-                    `  • Extracted secrets from ${Object.keys(environments).length} environment(s)`
-                )
-            );
+            this.log(chalk.green(`  • Extracted secrets from all environment(s)`));
             this.log(chalk.green(`  • Exported secrets to ${outPath}`));
             this.log(
                 chalk.green(`  • Whitelisted modules and enabled filesystem access in bruno.json`)
             );
             this.log(chalk.green(`  • Updated collection.bru with pre-request script`));
 
-            if (upsert1PasswordItem) {
+            if (upsertItem) {
                 this.log(
                     chalk.green(`  • Created/Updated 1Password item "${title}" in vault "${vault}"`)
                 );
@@ -126,7 +122,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
             this.log(chalk.cyan('  1. Review the generated files'));
             this.log(chalk.cyan('  2. Test the pre-request script in Bruno'));
 
-            if (!upsert1PasswordItem) {
+            if (!upsertItem) {
                 this.log(
                     chalk.cyan('  3. Consider creating a 1Password item with --1password flag')
                 );
