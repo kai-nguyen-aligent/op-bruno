@@ -20,11 +20,7 @@ export class OnePasswordManager {
         Object.keys(environments).forEach(env => {
             const envVars = environments[env];
             const fields: op.FieldAssignment[] | undefined = envVars?.map(v => {
-                return [
-                    `${env.toLowerCase()}.${v.name}`,
-                    'concealed',
-                    'to-be-replaced-with-real-secret',
-                ];
+                return [`${env}.${v.name}`, 'concealed', 'to-be-replaced-with-real-secret'];
             });
 
             if (fields) {
