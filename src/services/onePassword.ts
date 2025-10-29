@@ -14,18 +14,27 @@ export class OnePasswordManager {
         this.command = command;
     }
 
-    private buildFieldAssignments(environments: BrunoEnvironments) {
+    private buildFieldAssignments(
+        environments: BrunoEnvironments,
+        existingFields?: op.Item['fields']
+    ) {
         const assignments: op.FieldAssignment[] = [];
 
         Object.keys(environments).forEach(env => {
             const envVars = environments[env];
-            const fields: op.FieldAssignment[] | undefined = envVars?.map(v => {
-                return [`${env}.${v.name}`, 'concealed', 'to-be-replaced-with-real-secret'];
+            if (!envVars) return;
+
+            const fields: Array<op.FieldAssignment | undefined> = envVars.map(v => {
+                const existingField = existingFields?.find(
+                    field => field.section?.label === env && field.label === v.name
+                );
+
+                return existingField
+                    ? undefined
+                    : [`${env}.${v.name}`, 'concealed', 'to-be-replaced-with-real-secret'];
             });
 
-            if (fields) {
-                assignments.push(...fields);
-            }
+            assignments.push(...fields.filter(field => field !== undefined));
         });
 
         return assignments;
@@ -66,12 +75,11 @@ export class OnePasswordManager {
     }
 
     private updateItem(environments: BrunoEnvironments, item: op.Item) {
-        const { title, vault } = item;
+        const { title, vault, fields } = item;
         this.command.info(`Updating 1Password item ${title} in vault ${vault.name}`);
-        // TODO: remove fields in the item????
 
         try {
-            const assignments = this.buildFieldAssignments(environments);
+            const assignments = this.buildFieldAssignments(environments, fields);
 
             const { id } = op.item.edit(item.id, assignments);
 

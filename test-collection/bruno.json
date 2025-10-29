@@ -1,0 +1,18 @@
+{
+  "version": "1",
+  "name": "Test Collection",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ],
+  "scripts": {
+    "moduleWhitelist": [
+      "child_process",
+      "fs"
+    ],
+    "filesystemAccess": {
+      "allow": true
+    }
+  }
+}

@@ -1,0 +1,15 @@
+meta {
+  name: Test Request
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASED_URL}}/test
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

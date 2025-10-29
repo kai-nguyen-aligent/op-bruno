@@ -27,3 +27,5 @@ oclif.manifest.json
 # OS
 .DS_Store
 tsconfig.tsbuildinfo
+test-collection/collection.bru
+test-collection/op-secrets.json

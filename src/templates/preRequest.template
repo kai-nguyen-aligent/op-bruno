@@ -8,10 +8,10 @@ const SECRET_CONFIG_PATH = '<%= secretConfigPath %>';
 const ONE_PASSWORD_BINARY = '<%= onePasswordBin %>';
 
 async function fetchSecretsFrom1Password() {
+    const env = bru.getEnvName();
     const isSecretLoaded = bru.getEnvVar('OP_SECRETS_LOADED');
 
-    if (!isSecretLoaded) {
-        const env = bru.getEnvName();
+    if (env && !isSecretLoaded) {
         console.log(`Fetching secrets for ${env} environment from 1Password...`);
 
         const configPath = `${bru.cwd()}/${SECRET_CONFIG_PATH}`;

@@ -95,7 +95,9 @@ export default class Sync extends BaseCommand<typeof Sync> {
                 opManager.verifyAccess(vault);
                 opManager.upsertItem(environments, { vault, title });
             } else {
-                this.skipped('Skipping 1Password item creation (use --1password flag to enable)');
+                this.skipped(
+                    'Skipping 1Password item creation/update (use --upsertItem flag to enable)'
+                );
             }
 
             this.debug(chalk.bold('\nStep 5: Updating collection.bru with pre-request script...'));
@@ -124,7 +126,9 @@ export default class Sync extends BaseCommand<typeof Sync> {
 
             if (!upsertItem) {
                 this.log(
-                    chalk.cyan('  3. Consider creating a 1Password item with --1password flag')
+                    chalk.cyan(
+                        '  3. Consider creating/updating a 1Password item with --upsertItem flag'
+                    )
                 );
             }
         } catch (err) {

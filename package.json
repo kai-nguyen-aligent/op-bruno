@@ -1,6 +1,6 @@
 {
   "name": "op-bruno",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "CLI tool to sync Bruno secrets with 1Password",
   "author": "Kai Nguyen",
   "homepage": "https://github.com/kai-nguyen-aligent/op-bruno",
