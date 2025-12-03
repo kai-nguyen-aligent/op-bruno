@@ -37,6 +37,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
             description: '1Password item title',
             defaultHelp: 'Default to collection name',
         }),
+        // TODO: Flags for skip pre-request
         upsertItem: Flags.boolean({
             description: 'Create or Update 1Password item',
             default: false,
@@ -45,27 +46,26 @@ export default class Sync extends BaseCommand<typeof Sync> {
 
     async run(): Promise<void> {
         const { args, flags } = await this.parse(Sync);
-        const brunoDir = path.resolve(process.cwd(), args.collection);
+        const collectionDir = path.resolve(process.cwd(), args.collection);
 
-        // Validate Bruno directory
-        if (!(await fs.pathExists(brunoDir))) {
-            this.error(`Bruno directory not found: ${brunoDir}`);
+        if (!(await fs.pathExists(collectionDir))) {
+            this.error(`Collection directory not found: ${collectionDir}`);
         }
 
-        const outPath = path.join(brunoDir, flags.outName);
+        const outPath = path.join(collectionDir, flags.outName);
 
         this.log(chalk.bold.cyan('\n🔐 Bruno Secrets Sync Command Line Tool\n'));
-        this.log(chalk.blue(`📁 Bruno directory: ${brunoDir}`));
+        this.log(chalk.blue(`📁 Bruno directory: ${collectionDir}`));
         this.log(chalk.blue(`📝 Output file: ${outPath}\n`));
 
         try {
-            const configManager = new BrunoConfigManager(brunoDir, this);
+            const configManager = new BrunoConfigManager(collectionDir, this);
             const name = await configManager.getName();
 
             const { outName, title = name, vault, upsertItem } = flags;
 
             this.debug(chalk.bold('Step 1: Extracting secrets from Bruno environments...'));
-            const exporter = new BrunoEnvironmentsExport(brunoDir, vault, title);
+            const exporter = new BrunoEnvironmentsExport(collectionDir, vault, title);
             const environments = await exporter.parseEnvironments();
 
             if (Object.keys(environments).length === 0) {
@@ -101,7 +101,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
             }
 
             this.debug(chalk.bold('\nStep 5: Updating collection.bru with pre-request script...'));
-            const collectionGen = new BrunoCollectionFileGenerator(brunoDir, this);
+            const collectionGen = new BrunoCollectionFileGenerator(collectionDir, this);
             await collectionGen.upsertCollection(outName);
 
             // Success summary
@@ -134,12 +134,11 @@ export default class Sync extends BaseCommand<typeof Sync> {
         } catch (err) {
             const error = err as Error & PrettyPrintableError;
 
-            this.error('Failed Bruno secrets sync', {
-                message: error.message || 'Unknown error',
+            this.error(error.message, {
                 ref: error.ref ? error.ref : 'https://github.com/kai-nguyen-aligent/op-bruno',
                 suggestions: error.suggestions
                     ? error.suggestions
-                    : ['Please log an issue on our github repository'],
+                    : ['If error persist, please log an issue on our github repository'],
             });
         }
     }
