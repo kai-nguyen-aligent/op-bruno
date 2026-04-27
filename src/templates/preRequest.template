@@ -8,6 +8,10 @@ const SECRET_CONFIG_PATH = '<%= secretConfigPath %>';
 const ONE_PASSWORD_BINARY = '<%= onePasswordBin %>';
 
 async function fetchSecretsFrom1Password() {
+    if (bru.isSafeMode()) {
+        throw new Error('Developer Mode must be enabled for fetching secrets from 1Password. Please enable it in Settings > Developer Mode.');
+    }
+
     const env = bru.getEnvName();
     const isSecretLoaded = bru.getEnvVar('OP_SECRETS_LOADED');
 
