@@ -59,7 +59,7 @@ $ npm install -g op-bruno
 $ op-bruno COMMAND
 running command...
 $ op-bruno (--version)
-op-bruno/1.0.0 linux-x64 node-v20.20.2
+op-bruno/1.1.0 linux-x64 node-v20.20.2
 $ op-bruno --help [COMMAND]
 USAGE
   $ op-bruno COMMAND
@@ -71,7 +71,7 @@ USAGE
 
 <!-- commands -->
 * [`op-bruno help [COMMAND]`](#op-bruno-help-command)
-* [`op-bruno sync COLLECTION`](#op-bruno-sync-collection)
+* [`op-bruno sync [COLLECTION]`](#op-bruno-sync-collection)
 
 ## `op-bruno help [COMMAND]`
 
@@ -93,24 +93,24 @@ DESCRIPTION
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v6.2.33/src/commands/help.ts)_
 
-## `op-bruno sync COLLECTION`
+## `op-bruno sync [COLLECTION]`
 
 Extract secrets from Bruno environment files and generate pre-request script for fetching from 1Password
 
 ```
 USAGE
-  $ op-bruno sync COLLECTION [--json] [--outDir <value>] [--vault <value>] [--title <value>]
-    [--skipPreRequest] [--upsertItem]
+  $ op-bruno sync [COLLECTION] [--json] [--outDir <value>] [--vault <value>] [--title <value>]
+    [--upsertItem] [--skipPreRequest]
 
 ARGUMENTS
   COLLECTION  Path to Bruno collection directory
 
 FLAGS
-  --outDir=<value>   [default: op-secrets] Output directory name for per-environment secret files
-  --skipPreRequest   Skip generating the pre-request script
-  --title=<value>    1Password item title
-  --upsertItem       Create or Update 1Password item
-  --vault=<value>    [default: Employee] 1Password vault name
+  --outDir=<value>  [default: op-secrets] Output directory name for per-environment secret files
+  --skipPreRequest  Skip generating the pre-request script
+  --title=<value>   1Password item title
+  --upsertItem      Create or Update 1Password item
+  --vault=<value>   [default: Employee] 1Password vault name
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -118,16 +118,13 @@ GLOBAL FLAGS
 DESCRIPTION
   Extract secrets from Bruno environment files and generate pre-request script for fetching from 1Password
 
-  When flags are omitted, the tool will interactively prompt for values (vault, title, upsertItem,
-  skipPreRequest). Pass flags explicitly to skip prompts (useful for CI/scripts).
-
 EXAMPLES
   $ op-bruno sync ./bruno-collection --outDir op-secrets
 
   $ op-bruno sync ./bruno-collection --outDir op-secrets --vault Engineering --title "API Secrets" --upsertItem
 ```
 
-_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v1.0.0/src/commands/sync.ts)_
+_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v1.1.0/src/commands/sync.ts)_
 <!-- commandsstop -->
 
 # How It Works
