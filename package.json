@@ -26,12 +26,14 @@
     "@usebruno/lang": "^0.29.0",
     "chalk": "^5.6.2",
     "ejs": "^3.1.10",
-    "fs-extra": "^11.3.1"
+    "fs-extra": "^11.3.1",
+    "js-yaml": "^4.1.1"
   },
   "devDependencies": {
     "@aligent/ts-code-standards": "^4.0.2",
     "@types/ejs": "^3",
     "@types/fs-extra": "^11.0.4",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.10.5",
     "@typescript-eslint/eslint-plugin": "^8.20.0",
     "@typescript-eslint/parser": "^8.20.0",

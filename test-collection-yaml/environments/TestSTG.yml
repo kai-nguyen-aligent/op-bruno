@@ -1,0 +1,12 @@
+name: TestSTG
+variables:
+  - name: BASED_URL
+    value: https://based-test.url
+    enabled: true
+    secret: false
+    type: text
+  - name: TEST_API_KEY
+    value: ""
+    enabled: true
+    secret: true
+    type: text
