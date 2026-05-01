@@ -2,9 +2,9 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import { BaseCommand } from '../../base-command.js';
 import Sync from '../../commands/sync.js';
-import { BrunoConfig } from '../../types/index.js';
+import { BrunoConfig, ConfigManager } from '../../types/index.js';
 
-export class BrunoConfigManager {
+export class BrunoConfigManager implements ConfigManager {
     private readonly configPath: string;
     private readonly requiredModules = ['child_process', 'fs'];
     private readonly command: BaseCommand<typeof Sync>;

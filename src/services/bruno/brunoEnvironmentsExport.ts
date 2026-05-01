@@ -1,9 +1,9 @@
 import { bruToEnvJsonV2 } from '@usebruno/lang';
 import fs from 'fs-extra';
 import path from 'path';
-import { BrunoEnvironments } from '../../types/index.js';
+import { BrunoEnvironments, EnvironmentParser } from '../../types/index.js';
 
-export class BrunoEnvironmentsExport {
+export class BrunoEnvironmentsExport implements EnvironmentParser {
     private environmentsPath: string;
     private vault: string;
     private item?: string;

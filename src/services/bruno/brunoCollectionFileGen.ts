@@ -1,18 +1,18 @@
 import { PrettyPrintableError } from '@oclif/core/interfaces';
 import { Collection, collectionBruToJson, jsonToCollectionBru } from '@usebruno/lang';
 import chalk from 'chalk';
-import { execSync } from 'child_process';
-import ejs from 'ejs';
 import fs from 'fs-extra';
 import path from 'path';
 import { BaseCommand } from '../../base-command.js';
 import Sync from '../../commands/sync.js';
+import { CollectionFileGenerator } from '../../types/index.js';
+import {
+    END_MARKER,
+    START_MARKER,
+    generatePreRequestScript,
+} from '../preRequestScriptGenerator.js';
 
-export class BrunoCollectionFileGenerator {
-    private readonly startMarker = '// === START: 1Password Secret Management ===';
-    private readonly endMarker = '// === END: 1Password Secret Management ===';
-    private readonly templatePath = '../../templates/preRequest.template';
-
+export class BrunoCollectionFileGenerator implements CollectionFileGenerator {
     private readonly collectionFilePath: string;
     private readonly command: BaseCommand<typeof Sync>;
 
@@ -34,7 +34,7 @@ export class BrunoCollectionFileGenerator {
 
     async createNewCollection(secretsPath: string) {
         const collection: Collection = {
-            script: { req: await this.generatePreRequestScript(secretsPath) },
+            script: { req: await generatePreRequestScript(secretsPath) },
         };
 
         this.command.success('Created new collection.bru');
@@ -45,7 +45,7 @@ export class BrunoCollectionFileGenerator {
         const content = await fs.readFile(this.collectionFilePath, 'utf-8');
         const collection = collectionBruToJson(content);
 
-        const req = await this.generatePreRequestScript(secretsPath);
+        const req = await generatePreRequestScript(secretsPath);
 
         // script does not exist, add new script
         if (!collection.script) {
@@ -86,8 +86,8 @@ export class BrunoCollectionFileGenerator {
     private mergePreRequestScripts(existing: string, newScript: string) {
         const lines = existing.split('\n');
 
-        const startIndex = lines.findIndex(line => line.trim() === this.startMarker);
-        const endIndex = lines.findIndex(line => line.trim() === this.endMarker);
+        const startIndex = lines.findIndex(line => line.trim() === START_MARKER);
+        const endIndex = lines.findIndex(line => line.trim() === END_MARKER);
 
         if (startIndex < 0 && endIndex < 0) {
             return [newScript, existing].join('\n');
@@ -99,21 +99,5 @@ export class BrunoCollectionFileGenerator {
         }
 
         return null;
-    }
-
-    private async generatePreRequestScript(secretConfigPath: string) {
-        const templatePath = path.resolve(import.meta.dirname, this.templatePath);
-        const template = await fs.readFile(templatePath, 'utf-8');
-
-        const onePasswordBin = execSync('which op').toString().trim();
-
-        const result = ejs.render(template, {
-            secretConfigPath,
-            onePasswordBin,
-            startMarker: this.startMarker,
-            endMarker: this.endMarker,
-        });
-
-        return result.trimEnd();
     }
 }
