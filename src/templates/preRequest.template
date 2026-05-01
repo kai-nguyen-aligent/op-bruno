@@ -4,7 +4,7 @@
 const { execSync } = require('child_process');
 const { readFileSync, existsSync } = require('fs');
 
-const SECRET_CONFIG_PATH = '<%= secretConfigPath %>';
+const SECRET_CONFIG_DIR = '<%= secretConfigDir %>';
 const ONE_PASSWORD_BINARY = '<%= onePasswordBin %>';
 
 async function fetchSecretsFrom1Password() {
@@ -16,19 +16,16 @@ async function fetchSecretsFrom1Password() {
     const isSecretLoaded = bru.getEnvVar('OP_SECRETS_LOADED');
 
     if (env && !isSecretLoaded) {
+        const configPath = `${bru.cwd()}/${SECRET_CONFIG_DIR}/${env}.json`;
+
+        if (!existsSync(configPath)) {
+            console.log(`No secrets file found for ${env} environment, skipping.`);
+            return;
+        }
+
         console.log(`Fetching secrets for ${env} environment from 1Password...`);
 
-        const configPath = `${bru.cwd()}/${SECRET_CONFIG_PATH}`;
-        if (!existsSync(configPath)) {
-            throw new Error(`Secrets doesn't exist at ${configPath}`);
-        }
-
-        const config = JSON.parse(readFileSync(configPath, 'utf8'));
-        const secrets = config[env];
-
-        if (!secrets) {
-            throw new Error(`No secrets found for ${env} environment`);
-        }
+        const secrets = JSON.parse(readFileSync(configPath, 'utf8'));
 
         const promise = secrets.map(async secret => {
             const value = execSync(`${ONE_PASSWORD_BINARY} read "${secret.value}"`);

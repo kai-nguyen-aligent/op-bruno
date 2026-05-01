@@ -25,8 +25,8 @@ export default class Sync extends BaseCommand<typeof Sync> {
         'Extract secrets from Bruno environment files and generate pre-request script for fetching from 1Password';
 
     static override examples = [
-        '<%= config.bin %> <%= command.id %> ./bruno-collection --outName secrets.json',
-        '<%= config.bin %> <%= command.id %> ./bruno-collection --outName secrets.json --vault Engineering --title "API Secrets" --upsertItem',
+        '<%= config.bin %> <%= command.id %> ./bruno-collection --outDir op-secrets',
+        '<%= config.bin %> <%= command.id %> ./bruno-collection --outDir op-secrets --vault Engineering --title "API Secrets" --upsertItem',
     ];
 
     static override args = {
@@ -37,10 +37,10 @@ export default class Sync extends BaseCommand<typeof Sync> {
     };
 
     static override flags = {
-        outName: Flags.string({
-            description: 'JSON output file name',
-            default: 'op-secrets.json',
-            defaultHelp: 'The file will be saved in collection dir',
+        outDir: Flags.string({
+            description: 'Output directory name for per-environment secret files',
+            default: 'op-secrets',
+            defaultHelp: 'The directory will be created in the collection dir',
         }),
         vault: Flags.string({ description: '1Password vault name', default: 'Employee' }),
         title: Flags.string({
@@ -88,11 +88,11 @@ export default class Sync extends BaseCommand<typeof Sync> {
             this.error(`Collection directory not found: ${collectionDir}`);
         }
 
-        const outPath = path.join(collectionDir, flags.outName);
+        const outDir = path.join(collectionDir, flags.outDir);
 
         this.log(chalk.bold.cyan('\n🔐 Bruno Secrets Sync Command Line Tool\n'));
         this.log(chalk.blue(`📁 Bruno directory: ${collectionDir}`));
-        this.log(chalk.blue(`📝 Output file: ${outPath}\n`));
+        this.log(chalk.blue(`📝 Output directory: ${outDir}\n`));
 
         try {
             const format = await detectCollectionFormat(collectionDir);
@@ -103,7 +103,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
                 `Detected collection format: ${format === 'yaml' ? 'OpenCollection YAML' : 'Bru Lang'}`
             );
 
-            const { outName, vault } = flags;
+            const { outDir: outDirName, vault } = flags;
 
             const configManager = this.createConfigManager(format, collectionDir);
             const name = await configManager.getName();
@@ -130,7 +130,12 @@ export default class Sync extends BaseCommand<typeof Sync> {
             }
 
             this.debug(chalk.bold('\nStep 2: Exporting secrets to JSON...'));
-            await fs.writeFile(outPath, JSON.stringify(environments, null, 2));
+            await fs.ensureDir(outDir);
+            for (const [envName, secrets] of Object.entries(environments)) {
+                if (secrets.length === 0) continue;
+                const envFilePath = path.join(outDir, `${envName}.json`);
+                await fs.writeFile(envFilePath, JSON.stringify(secrets, null, 2));
+            }
 
             this.debug(chalk.bold(`\nStep 3: Updating ${configFile}...`));
             await configManager.updateConfig();
@@ -151,13 +156,13 @@ export default class Sync extends BaseCommand<typeof Sync> {
                 chalk.bold(`\nStep 5: Updating ${collectionFile} with pre-request script...`)
             );
 
-            await collectionGen.updateCollection(outName);
+            await collectionGen.updateCollection(outDirName);
 
             // Success summary
             this.log(chalk.bold.green('\n🏁 Completed Bruno secrets sync!\n'));
             this.log(chalk.green('Summary:'));
             this.log(chalk.green(`  • Extracted secrets from all environment(s)`));
-            this.log(chalk.green(`  • Exported secrets to ${outPath}`));
+            this.log(chalk.green(`  • Exported secrets to ${outDir}`));
             this.log(
                 chalk.green(
                     `  • Whitelisted modules and enabled filesystem access in ${configFile}`
