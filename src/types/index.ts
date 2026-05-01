@@ -31,7 +31,17 @@ export interface RuntimeScript {
 }
 
 export interface OpenCollectionConfig {
-    [key: string]: unknown;
+    opencollection?: string;
+    info?: {
+        name?: string;
+        [key: string]: unknown;
+    };
+    scripts?: {
+        moduleWhitelist?: string[];
+        filesystemAccess?: {
+            allow: boolean;
+        };
+    };
     runtime?: {
         scripts?: RuntimeScript[];
         [key: string]: unknown;

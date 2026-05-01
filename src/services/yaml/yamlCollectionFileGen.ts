@@ -32,13 +32,17 @@ export class YamlCollectionFileGenerator implements CollectionFileGenerator {
         }
 
         const scriptCode = await generatePreRequestScript(secretsPath);
-        const existingBeforeRequest = originalConfig.runtime?.scripts?.findIndex(
-            s => s.type === 'before-request'
-        );
+        const existingBeforeRequest =
+            originalConfig.runtime?.scripts?.findIndex(s => s.type === 'before-request') ?? -1;
 
-        const config = existingBeforeRequest
-            ? this.modifyExistingBeforeRequest(originalConfig, existingBeforeRequest, scriptCode)
-            : this.addNewRuntimeScript(originalConfig, scriptCode);
+        const config =
+            existingBeforeRequest >= 0
+                ? this.modifyExistingBeforeRequest(
+                      originalConfig,
+                      existingBeforeRequest,
+                      scriptCode
+                  )
+                : this.addNewRuntimeScript(originalConfig, scriptCode);
 
         const output = yaml.dump(config, { lineWidth: -1, noRefs: true });
         await fs.writeFile(this.collectionFilePath, output, 'utf-8');
@@ -51,12 +55,14 @@ export class YamlCollectionFileGenerator implements CollectionFileGenerator {
         };
 
         if (!config.runtime) {
-            config.runtime = { scripts: [script] };
+            config.runtime = { scripts: [] };
         }
 
         if (!config.runtime.scripts) {
-            config.runtime.scripts = [script];
+            config.runtime.scripts = [];
         }
+
+        config.runtime.scripts.push(script);
 
         this.command.success('Added new before-request script to opencollection.yml');
         return config;

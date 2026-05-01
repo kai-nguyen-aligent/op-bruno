@@ -3,22 +3,7 @@ import yaml from 'js-yaml';
 import path from 'path';
 import { BaseCommand } from '../../base-command.js';
 import Sync from '../../commands/sync.js';
-import { ConfigManager } from '../../types/index.js';
-
-interface OpenCollectionConfig {
-    opencollection?: string;
-    info?: {
-        name?: string;
-        [key: string]: unknown;
-    };
-    scripts?: {
-        moduleWhitelist?: string[];
-        filesystemAccess?: {
-            allow: boolean;
-        };
-    };
-    [key: string]: unknown;
-}
+import { ConfigManager, OpenCollectionConfig } from '../../types/index.js';
 
 export class YamlConfigManager implements ConfigManager {
     private readonly configPath: string;
@@ -64,7 +49,7 @@ export class YamlConfigManager implements ConfigManager {
             if (!isModuleExist) moduleWhitelist.push(required);
         });
 
-        config.scripts = { moduleWhitelist, filesystemAccess: { allow: true } };
+        config.scripts = { ...config.scripts, moduleWhitelist, filesystemAccess: { allow: true } };
 
         const output = yaml.dump(config, { lineWidth: -1, noRefs: true });
         await fs.writeFile(this.configPath, output, 'utf-8');
