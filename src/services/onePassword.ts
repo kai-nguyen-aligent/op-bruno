@@ -3,7 +3,7 @@ import { PrettyPrintableError } from '@oclif/core/interfaces';
 import path from 'path';
 import { BaseCommand } from '../base-command.js';
 import Sync from '../commands/sync.js';
-import { BrunoEnvironments, OnePasswordOptions } from '../types/index.js';
+import { Environments, OnePasswordOptions } from '../types/index.js';
 
 export class OnePasswordManager {
     private readonly templatePath = '../templates/onePasswordItemTemplate.json';
@@ -14,10 +14,7 @@ export class OnePasswordManager {
         this.command = command;
     }
 
-    private buildFieldAssignments(
-        environments: BrunoEnvironments,
-        existingFields?: op.Item['fields']
-    ) {
+    private buildFieldAssignments(environments: Environments, existingFields?: op.Item['fields']) {
         const assignments: op.FieldAssignment[] = [];
 
         Object.keys(environments).forEach(env => {
@@ -52,7 +49,7 @@ export class OnePasswordManager {
         });
     }
 
-    private createItem(environments: BrunoEnvironments, options: OnePasswordOptions) {
+    private createItem(environments: Environments, options: OnePasswordOptions) {
         const { vault, title } = options;
         this.command.info(`Creating new 1Password item: "${title}" in vault: "${vault}"`);
 
@@ -74,7 +71,7 @@ export class OnePasswordManager {
         }
     }
 
-    private updateItem(environments: BrunoEnvironments, item: op.Item) {
+    private updateItem(environments: Environments, item: op.Item) {
         const { title, vault, fields } = item;
         this.command.info(`Updating 1Password item ${title} in vault ${vault.name}`);
 
@@ -95,7 +92,7 @@ export class OnePasswordManager {
         }
     }
 
-    upsertItem(environments: BrunoEnvironments, options: OnePasswordOptions) {
+    upsertItem(environments: Environments, options: OnePasswordOptions) {
         const { title, vault } = options;
 
         let item: op.Item | undefined = undefined;

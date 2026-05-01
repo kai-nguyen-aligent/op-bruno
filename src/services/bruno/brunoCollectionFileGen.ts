@@ -17,11 +17,11 @@ export class BrunoCollectionFileGenerator {
     }
 
     async upsertCollection(secretsPath: string) {
-        const isCollectionFileExist = await fs.pathExists(this.collectionFilePath);
+        const doesCollectionFileExist = await fs.pathExists(this.collectionFilePath);
 
         const scriptCode = await generatePreRequestScript(secretsPath);
 
-        const collection = isCollectionFileExist
+        const collection = doesCollectionFileExist
             ? await this.modifyExistingCollection(scriptCode)
             : await this.createNewCollection(scriptCode);
 
@@ -29,7 +29,7 @@ export class BrunoCollectionFileGenerator {
         await fs.writeFile(this.collectionFilePath, content, 'utf-8');
     }
 
-    async createNewCollection(scriptCode: string) {
+    private async createNewCollection(scriptCode: string) {
         const collection: Collection = {
             script: { req: scriptCode },
         };
@@ -38,7 +38,7 @@ export class BrunoCollectionFileGenerator {
         return collection;
     }
 
-    async modifyExistingCollection(scriptCode: string) {
+    private async modifyExistingCollection(scriptCode: string) {
         const content = await fs.readFile(this.collectionFilePath, 'utf-8');
         const collection = collectionBruToJson(content);
 

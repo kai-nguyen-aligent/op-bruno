@@ -8,7 +8,12 @@ import { PrettyPrintableError } from '@oclif/core/interfaces';
 import { BrunoCollectionFileGenerator } from '../services/bruno/brunoCollectionFileGen.js';
 import { BrunoConfigManager } from '../services/bruno/brunoConfigManager.js';
 import { BrunoEnvironmentsExport } from '../services/bruno/brunoEnvironmentsExport.js';
+import { detectCollectionFormat } from '../services/collectionFormatDetector.js';
 import { OnePasswordManager } from '../services/onePassword.js';
+import { YamlCollectionFileGenerator } from '../services/yaml/yamlCollectionFileGen.js';
+import { YamlConfigManager } from '../services/yaml/yamlConfigManager.js';
+import { YamlEnvironmentsExport } from '../services/yaml/yamlEnvironmentsExport.js';
+import { CollectionFormat, ConfigManager, EnvironmentParser } from '../types/index.js';
 
 export default class Sync extends BaseCommand<typeof Sync> {
     static override description =
@@ -44,6 +49,32 @@ export default class Sync extends BaseCommand<typeof Sync> {
         }),
     };
 
+    private createExporter(
+        format: CollectionFormat,
+        collectionDir: string,
+        vault: string,
+        title: string
+    ): EnvironmentParser {
+        return format === 'yaml'
+            ? new YamlEnvironmentsExport(collectionDir, vault, title)
+            : new BrunoEnvironmentsExport(collectionDir, vault, title);
+    }
+
+    private createConfigManager(format: CollectionFormat, collectionDir: string): ConfigManager {
+        return format === 'yaml'
+            ? new YamlConfigManager(collectionDir, this)
+            : new BrunoConfigManager(collectionDir, this);
+    }
+
+    private createCollectionGen(
+        format: CollectionFormat,
+        collectionDir: string
+    ): BrunoCollectionFileGenerator | YamlCollectionFileGenerator {
+        return format === 'yaml'
+            ? new YamlCollectionFileGenerator(collectionDir, this)
+            : new BrunoCollectionFileGenerator(collectionDir, this);
+    }
+
     async run(): Promise<void> {
         const { args, flags } = await this.parse(Sync);
         const collectionDir = path.resolve(process.cwd(), args.collection);
@@ -59,13 +90,24 @@ export default class Sync extends BaseCommand<typeof Sync> {
         this.log(chalk.blue(`📝 Output file: ${outPath}\n`));
 
         try {
-            const configManager = new BrunoConfigManager(collectionDir, this);
-            const name = await configManager.getName();
+            const format = await detectCollectionFormat(collectionDir);
+            const configFile = format === 'yaml' ? 'opencollection.yml' : 'bruno.json';
+            const collectionFile = format === 'yaml' ? 'opencollection.yml' : 'collection.bru';
 
-            const { outName, title = name, vault, upsertItem } = flags;
+            this.info(
+                `Detected collection format: ${format === 'yaml' ? 'OpenCollection YAML' : 'Bru Lang'}`
+            );
+
+            const { outName, vault } = flags;
+
+            const configManager = this.createConfigManager(format, collectionDir);
+            const name = await configManager.getName();
+            const title = flags.title || name;
+
+            const exporter = this.createExporter(format, collectionDir, vault, title);
+            const collectionGen = this.createCollectionGen(format, collectionDir);
 
             this.debug(chalk.bold('Step 1: Extracting secrets from Bruno environments...'));
-            const exporter = new BrunoEnvironmentsExport(collectionDir, vault, title);
             const environments = await exporter.parseEnvironments();
 
             if (Object.keys(environments).length === 0) {
@@ -85,10 +127,10 @@ export default class Sync extends BaseCommand<typeof Sync> {
             this.debug(chalk.bold('\nStep 2: Exporting secrets to JSON...'));
             await fs.writeFile(outPath, JSON.stringify(environments, null, 2));
 
-            this.debug(chalk.bold('\nStep 3: Updating bruno.json...'));
+            this.debug(chalk.bold(`\nStep 3: Updating ${configFile}...`));
             await configManager.updateConfig();
 
-            if (upsertItem) {
+            if (flags.upsertItem) {
                 this.debug(chalk.bold('\nStep 4: Creating/updating 1Password item...'));
                 const opManager = new OnePasswordManager(this);
 
@@ -100,9 +142,14 @@ export default class Sync extends BaseCommand<typeof Sync> {
                 );
             }
 
-            this.debug(chalk.bold('\nStep 5: Updating collection.bru with pre-request script...'));
-            const collectionGen = new BrunoCollectionFileGenerator(collectionDir, this);
-            await collectionGen.upsertCollection(outName);
+            this.debug(
+                chalk.bold(`\nStep 5: Updating ${collectionFile} with pre-request script...`)
+            );
+            if (collectionGen instanceof YamlCollectionFileGenerator) {
+                await collectionGen.updateCollection(outName);
+            } else {
+                await collectionGen.upsertCollection(outName);
+            }
 
             // Success summary
             this.log(chalk.bold.green('\n🏁 Completed Bruno secrets sync!\n'));
@@ -110,11 +157,13 @@ export default class Sync extends BaseCommand<typeof Sync> {
             this.log(chalk.green(`  • Extracted secrets from all environment(s)`));
             this.log(chalk.green(`  • Exported secrets to ${outPath}`));
             this.log(
-                chalk.green(`  • Whitelisted modules and enabled filesystem access in bruno.json`)
+                chalk.green(
+                    `  • Whitelisted modules and enabled filesystem access in ${configFile}`
+                )
             );
-            this.log(chalk.green(`  • Updated collection.bru with pre-request script`));
+            this.log(chalk.green(`  • Updated ${collectionFile} with pre-request script`));
 
-            if (upsertItem) {
+            if (flags.upsertItem) {
                 this.log(
                     chalk.green(`  • Created/Updated 1Password item "${title}" in vault "${vault}"`)
                 );
@@ -124,7 +173,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
             this.log(chalk.cyan('  1. Review the generated files'));
             this.log(chalk.cyan('  2. Test the pre-request script in Bruno'));
 
-            if (!upsertItem) {
+            if (!flags.upsertItem) {
                 this.log(
                     chalk.cyan(
                         '  3. Consider creating/updating a 1Password item with --upsertItem flag'

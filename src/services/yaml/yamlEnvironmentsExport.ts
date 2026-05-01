@@ -1,9 +1,9 @@
-import { bruToEnvJsonV2 } from '@usebruno/lang';
 import fs from 'fs-extra';
+import yaml from 'js-yaml';
 import path from 'path';
-import { EnvironmentParser, Environments } from '../../types/index.js';
+import { EnvironmentParser, Environments, OpenCollectionEnvironment } from '../../types/index.js';
 
-export class BrunoEnvironmentsExport implements EnvironmentParser {
+export class YamlEnvironmentsExport implements EnvironmentParser {
     private environmentsPath: string;
     private vault: string;
     private item?: string;
@@ -24,21 +24,25 @@ export class BrunoEnvironmentsExport implements EnvironmentParser {
         }
 
         const files = await fs.readdir(this.environmentsPath);
-        const bruFiles = files.filter(f => f.endsWith('.bru'));
+        const ymlFiles = files.filter(f => f.endsWith('.yml') || f.endsWith('.yaml'));
 
         const environments: Environments = {};
 
-        for (const file of bruFiles) {
+        for (const file of ymlFiles) {
             const filePath = path.join(this.environmentsPath, file);
-            const envName = path.basename(file, '.bru');
             const content = await fs.readFile(filePath, 'utf-8');
+            const parsed = yaml.load(content) as OpenCollectionEnvironment;
 
-            const variables = bruToEnvJsonV2(content).variables;
+            const envName = parsed?.name || path.basename(file, path.extname(file));
+            const variables = parsed?.variables || [];
+
             const secrets = variables
                 .filter(variable => variable.secret)
                 .map(secret => ({
-                    ...secret,
+                    name: secret.name,
                     value: this.generateVaultRef(envName, secret.name),
+                    enabled: secret.enabled,
+                    secret: true,
                 }));
 
             environments[envName] = secrets;
