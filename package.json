@@ -1,6 +1,6 @@
 {
   "name": "op-bruno",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "CLI tool to sync Bruno secrets with 1Password",
   "author": "Kai Nguyen",
   "homepage": "https://github.com/kai-nguyen-aligent/op-bruno",
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@1password/op-js": "^0.1.13",
+    "@inquirer/prompts": "^8.4.2",
     "@oclif/core": "^4.5.2",
     "@oclif/plugin-help": "^6.2.32",
     "@usebruno/lang": "^0.29.0",

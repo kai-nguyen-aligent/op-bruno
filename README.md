@@ -30,7 +30,7 @@ A CLI tool to sync Bruno API client secrets with 1Password, enabling secure secr
 # Features
 
 - **Extract Secrets**: Automatically identifies and extracts secret variables from Bruno environment files
-- **JSON Export**: Exports extracted secrets to a structured JSON file
+- **JSON Export**: Exports extracted secrets to per-environment JSON files in a dedicated directory
 - **1Password Integration**: Creates and manages secrets in 1Password vaults
 - **Pre-request Scripts**: Generates Bruno pre-request scripts to fetch secrets from 1Password
 - **Filesystem Access**: Automatically configures Bruno collections for filesystem access
@@ -99,14 +99,15 @@ Extract secrets from Bruno environment files and generate pre-request script for
 
 ```
 USAGE
-  $ op-bruno sync COLLECTION [--json] [--outName <value>] [--vault <value>] [--title <value>]
-    [--upsertItem]
+  $ op-bruno sync COLLECTION [--json] [--outDir <value>] [--vault <value>] [--title <value>]
+    [--skipPreRequest] [--upsertItem]
 
 ARGUMENTS
   COLLECTION  Path to Bruno collection directory
 
 FLAGS
-  --outName=<value>  [default: op-secrets.json] JSON output file name
+  --outDir=<value>   [default: op-secrets] Output directory name for per-environment secret files
+  --skipPreRequest   Skip generating the pre-request script
   --title=<value>    1Password item title
   --upsertItem       Create or Update 1Password item
   --vault=<value>    [default: Employee] 1Password vault name
@@ -117,10 +118,13 @@ GLOBAL FLAGS
 DESCRIPTION
   Extract secrets from Bruno environment files and generate pre-request script for fetching from 1Password
 
-EXAMPLES
-  $ op-bruno sync ./bruno-collection --outName secrets.json
+  When flags are omitted, the tool will interactively prompt for values (vault, title, upsertItem,
+  skipPreRequest). Pass flags explicitly to skip prompts (useful for CI/scripts).
 
-  $ op-bruno sync ./bruno-collection --outName secrets.json --vault Engineering --title "API Secrets" --upsertItem
+EXAMPLES
+  $ op-bruno sync ./bruno-collection --outDir op-secrets
+
+  $ op-bruno sync ./bruno-collection --outDir op-secrets --vault Engineering --title "API Secrets" --upsertItem
 ```
 
 _See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v1.0.0/src/commands/sync.ts)_
@@ -130,26 +134,29 @@ _See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno
 
 1. **Secret Extraction**: The tool scans Bruno environment files (`.bru` files) in the `environments` directory and identifies secret variables.
 
-2. **JSON Export**: Extracted secrets are exported to a JSON file with the following structure:
+2. **JSON Export**: Extracted secrets are exported to per-environment JSON files inside an `op-secrets/` directory. Each file is named after its environment and contains only that environment's secrets. Environments with no secrets are skipped.
+
+   ```
+   op-secrets/
+   ├── development.json
+   └── production.json
+   ```
+
+   Each file contains an array of secret definitions:
 
    ```json
-   {
-     "development": {
-       "API_KEY": "op://path/to/the/secret",
-       "SECRET_TOKEN": "op://path/to/the/secret"
-     },
-     "production": {
-       "API_KEY": "op://path/to/the/secret",
-       "SECRET_TOKEN": "op://path/to/the/secret"
-     }
-   }
+   [
+     { "name": "API_KEY", "value": "op://path/to/the/secret", ... },
+     { "name": "SECRET_TOKEN", "value": "op://path/to/the/secret", ... }
+   ]
    ```
 
 3. **Bruno Configuration**: The tool modifies `bruno.json` to enable filesystem access, allowing pre-request scripts to execute system commands
 
-4. **Pre-request Script Generation**: A pre-request script is added to `collection.bru` that:
-   - Fetches secrets from 1Password based on the current environment
-   - Sets Bruno environment variables with the fetched values
+4. **Pre-request Script Generation**: A pre-request script is added to `collection.bru` (can be skipped with `--skipPreRequest`) that:
+   - Looks up the secrets file for the current environment (`op-secrets/<env>.json`)
+   - Skips gracefully if no secrets file exists for the environment
+   - Fetches secrets from 1Password and sets Bruno environment variables
 
 5. **1Password Storage**: If enabled, creates/updates a structured 1Password item with sections for each environment
 
@@ -158,8 +165,9 @@ _See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno
 The generated pre-request script in `collection.bru` will:
 
 1. Detect the current Bruno environment
-2. Fetch corresponding secrets from 1Password
-3. Set environment variables for use in requests
+2. Check if a secrets file exists for that environment (`op-secrets/<env>.json`)
+3. If found, fetch the corresponding secrets from 1Password
+4. Set environment variables for use in requests
 
 # Security Considerations
 

@@ -1,3 +1,4 @@
+import { confirm, input } from '@inquirer/prompts';
 import { Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -32,7 +33,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
     static override args = {
         collection: Args.string({
             description: 'Path to Bruno collection directory',
-            required: true,
+            required: false,
         }),
     };
 
@@ -47,12 +48,53 @@ export default class Sync extends BaseCommand<typeof Sync> {
             description: '1Password item title',
             defaultHelp: 'Default to collection name',
         }),
-        // TODO: Flags for skip pre-request
         upsertItem: Flags.boolean({
             description: 'Create or Update 1Password item',
             default: false,
         }),
+        skipPreRequest: Flags.boolean({
+            description: 'Skip generating the pre-request script',
+            default: false,
+        }),
     };
+
+    private async promptForFlags(
+        flags: Awaited<ReturnType<typeof Sync.prototype.parse>>['flags'],
+        metadata: { flags: Record<string, { setFromDefault?: boolean }> },
+        collectionName: string
+    ) {
+        const isDefault = (name: string) => metadata.flags[name]?.setFromDefault !== false;
+
+        const vault = isDefault('vault')
+            ? await input({
+                  message: '1Password vault name',
+                  default: flags.vault,
+              })
+            : flags.vault;
+
+        const title = isDefault('title')
+            ? await input({
+                  message: '1Password item title',
+                  default: flags.title || collectionName,
+              })
+            : flags.title;
+
+        const upsertItem = isDefault('upsertItem')
+            ? await confirm({
+                  message: 'Create or update 1Password item?',
+                  default: flags.upsertItem,
+              })
+            : flags.upsertItem;
+
+        const skipPreRequest = isDefault('skipPreRequest')
+            ? await confirm({
+                  message: 'Skip generating the pre-request script?',
+                  default: flags.skipPreRequest,
+              })
+            : flags.skipPreRequest;
+
+        return { vault, title, upsertItem, skipPreRequest };
+    }
 
     private createExporter(
         format: CollectionFormat,
@@ -81,8 +123,14 @@ export default class Sync extends BaseCommand<typeof Sync> {
     }
 
     async run(): Promise<void> {
-        const { args, flags } = await this.parse(Sync);
-        const collectionDir = path.resolve(process.cwd(), args.collection);
+        const { args, flags, metadata } = await this.parse(Sync);
+        const collection =
+            args.collection ??
+            (await input({
+                message: 'Path to Bruno collection directory',
+            }));
+
+        const collectionDir = path.resolve(process.cwd(), collection);
 
         if (!(await fs.pathExists(collectionDir))) {
             this.error(`Collection directory not found: ${collectionDir}`);
@@ -103,11 +151,14 @@ export default class Sync extends BaseCommand<typeof Sync> {
                 `Detected collection format: ${format === 'yaml' ? 'OpenCollection YAML' : 'Bru Lang'}`
             );
 
-            const { outDir: outDirName, vault } = flags;
-
             const configManager = this.createConfigManager(format, collectionDir);
-            const name = await configManager.getName();
-            const title = flags.title || name;
+            const collectionName = await configManager.getName();
+
+            const { vault, title, upsertItem, skipPreRequest } = await this.promptForFlags(
+                flags,
+                metadata,
+                collectionName
+            );
 
             const exporter = this.createExporter(format, collectionDir, vault, title);
             const collectionGen = this.createCollectionGen(format, collectionDir);
@@ -131,16 +182,21 @@ export default class Sync extends BaseCommand<typeof Sync> {
 
             this.debug(chalk.bold('\nStep 2: Exporting secrets to JSON...'));
             await fs.ensureDir(outDir);
-            for (const [envName, secrets] of Object.entries(environments)) {
-                if (secrets.length === 0) continue;
-                const envFilePath = path.join(outDir, `${envName}.json`);
-                await fs.writeFile(envFilePath, JSON.stringify(secrets, null, 2));
-            }
+            await Promise.all(
+                Object.entries(environments)
+                    .filter(([, secrets]) => secrets.length > 0)
+                    .map(([envName, secrets]) =>
+                        fs.writeFile(
+                            path.join(outDir, `${envName}.json`),
+                            JSON.stringify(secrets, null, 2)
+                        )
+                    )
+            );
 
             this.debug(chalk.bold(`\nStep 3: Updating ${configFile}...`));
             await configManager.updateConfig();
 
-            if (flags.upsertItem) {
+            if (upsertItem) {
                 this.debug(chalk.bold('\nStep 4: Creating/updating 1Password item...'));
                 const opManager = new OnePasswordManager(this);
 
@@ -152,11 +208,15 @@ export default class Sync extends BaseCommand<typeof Sync> {
                 );
             }
 
-            this.debug(
-                chalk.bold(`\nStep 5: Updating ${collectionFile} with pre-request script...`)
-            );
+            if (!skipPreRequest) {
+                this.debug(
+                    chalk.bold(`\nStep 5: Updating ${collectionFile} with pre-request script...`)
+                );
 
-            await collectionGen.updateCollection(outDirName);
+                await collectionGen.updateCollection(flags.outDir);
+            } else {
+                this.skipped('Skipping pre-request script generation (--skipPreRequest flag)');
+            }
 
             // Success summary
             this.log(chalk.bold.green('\n🏁 Completed Bruno secrets sync!\n'));
@@ -168,9 +228,11 @@ export default class Sync extends BaseCommand<typeof Sync> {
                     `  • Whitelisted modules and enabled filesystem access in ${configFile}`
                 )
             );
-            this.log(chalk.green(`  • Updated ${collectionFile} with pre-request script`));
+            if (!skipPreRequest) {
+                this.log(chalk.green(`  • Updated ${collectionFile} with pre-request script`));
+            }
 
-            if (flags.upsertItem) {
+            if (upsertItem) {
                 this.log(
                     chalk.green(`  • Created/Updated 1Password item "${title}" in vault "${vault}"`)
                 );
@@ -180,7 +242,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
             this.log(chalk.cyan('  1. Review the generated files'));
             this.log(chalk.cyan('  2. Test the pre-request script in Bruno'));
 
-            if (!flags.upsertItem) {
+            if (!upsertItem) {
                 this.log(
                     chalk.cyan(
                         '  3. Consider creating/updating a 1Password item with --upsertItem flag'
