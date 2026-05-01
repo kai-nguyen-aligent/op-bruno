@@ -13,7 +13,12 @@ import { OnePasswordManager } from '../services/onePassword.js';
 import { YamlCollectionFileGenerator } from '../services/yaml/yamlCollectionFileGen.js';
 import { YamlConfigManager } from '../services/yaml/yamlConfigManager.js';
 import { YamlEnvironmentsExport } from '../services/yaml/yamlEnvironmentsExport.js';
-import { CollectionFormat, ConfigManager, EnvironmentParser } from '../types/index.js';
+import {
+    CollectionFileGenerator,
+    CollectionFormat,
+    ConfigManager,
+    EnvironmentParser,
+} from '../types/index.js';
 
 export default class Sync extends BaseCommand<typeof Sync> {
     static override description =
@@ -69,7 +74,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
     private createCollectionGen(
         format: CollectionFormat,
         collectionDir: string
-    ): BrunoCollectionFileGenerator | YamlCollectionFileGenerator {
+    ): CollectionFileGenerator {
         return format === 'yaml'
             ? new YamlCollectionFileGenerator(collectionDir, this)
             : new BrunoCollectionFileGenerator(collectionDir, this);
@@ -145,11 +150,8 @@ export default class Sync extends BaseCommand<typeof Sync> {
             this.debug(
                 chalk.bold(`\nStep 5: Updating ${collectionFile} with pre-request script...`)
             );
-            if (collectionGen instanceof YamlCollectionFileGenerator) {
-                await collectionGen.updateCollection(outName);
-            } else {
-                await collectionGen.upsertCollection(outName);
-            }
+
+            await collectionGen.updateCollection(outName);
 
             // Success summary
             this.log(chalk.bold.green('\n🏁 Completed Bruno secrets sync!\n'));

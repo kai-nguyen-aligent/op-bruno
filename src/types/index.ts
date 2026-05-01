@@ -58,3 +58,7 @@ export interface ConfigManager {
     getName(): Promise<string>;
     updateConfig(): Promise<void>;
 }
+
+export interface CollectionFileGenerator {
+    updateCollection(secretsPath: string): Promise<void>;
+}

@@ -5,10 +5,10 @@ import yaml from 'js-yaml';
 import path from 'path';
 import { BaseCommand } from '../../base-command.js';
 import Sync from '../../commands/sync.js';
-import { OpenCollectionConfig, RuntimeScript } from '../../types/index.js';
+import { CollectionFileGenerator, OpenCollectionConfig, RuntimeScript } from '../../types/index.js';
 import { generatePreRequestScript, mergePreRequestScripts } from '../preRequestScriptGenerator.js';
 
-export class YamlCollectionFileGenerator {
+export class YamlCollectionFileGenerator implements CollectionFileGenerator {
     private readonly collectionFilePath: string;
     private readonly command: BaseCommand<typeof Sync>;
 

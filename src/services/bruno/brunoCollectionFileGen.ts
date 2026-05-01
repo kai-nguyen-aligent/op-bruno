@@ -5,9 +5,10 @@ import fs from 'fs-extra';
 import path from 'path';
 import { BaseCommand } from '../../base-command.js';
 import Sync from '../../commands/sync.js';
+import { CollectionFileGenerator } from '../../types/index.js';
 import { generatePreRequestScript, mergePreRequestScripts } from '../preRequestScriptGenerator.js';
 
-export class BrunoCollectionFileGenerator {
+export class BrunoCollectionFileGenerator implements CollectionFileGenerator {
     private readonly collectionFilePath: string;
     private readonly command: BaseCommand<typeof Sync>;
 
@@ -16,7 +17,7 @@ export class BrunoCollectionFileGenerator {
         this.command = command;
     }
 
-    async upsertCollection(secretsPath: string) {
+    async updateCollection(secretsPath: string) {
         const doesCollectionFileExist = await fs.pathExists(this.collectionFilePath);
 
         const scriptCode = await generatePreRequestScript(secretsPath);
