@@ -5,14 +5,9 @@ import fs from 'fs-extra';
 import path from 'path';
 import { BaseCommand } from '../../base-command.js';
 import Sync from '../../commands/sync.js';
-import { CollectionFileGenerator } from '../../types/index.js';
-import {
-    END_MARKER,
-    START_MARKER,
-    generatePreRequestScript,
-} from '../preRequestScriptGenerator.js';
+import { generatePreRequestScript, mergePreRequestScripts } from '../preRequestScriptGenerator.js';
 
-export class BrunoCollectionFileGenerator implements CollectionFileGenerator {
+export class BrunoCollectionFileGenerator {
     private readonly collectionFilePath: string;
     private readonly command: BaseCommand<typeof Sync>;
 
@@ -24,38 +19,38 @@ export class BrunoCollectionFileGenerator implements CollectionFileGenerator {
     async upsertCollection(secretsPath: string) {
         const isCollectionFileExist = await fs.pathExists(this.collectionFilePath);
 
+        const scriptCode = await generatePreRequestScript(secretsPath);
+
         const collection = isCollectionFileExist
-            ? await this.modifyExistingCollection(secretsPath)
-            : await this.createNewCollection(secretsPath);
+            ? await this.modifyExistingCollection(scriptCode)
+            : await this.createNewCollection(scriptCode);
 
         const content = jsonToCollectionBru(collection);
         await fs.writeFile(this.collectionFilePath, content, 'utf-8');
     }
 
-    async createNewCollection(secretsPath: string) {
+    async createNewCollection(scriptCode: string) {
         const collection: Collection = {
-            script: { req: await generatePreRequestScript(secretsPath) },
+            script: { req: scriptCode },
         };
 
         this.command.success('Created new collection.bru');
         return collection;
     }
 
-    async modifyExistingCollection(secretsPath: string) {
+    async modifyExistingCollection(scriptCode: string) {
         const content = await fs.readFile(this.collectionFilePath, 'utf-8');
         const collection = collectionBruToJson(content);
 
-        const req = await generatePreRequestScript(secretsPath);
-
         // script does not exist, add new script
         if (!collection.script) {
-            collection.script = { req };
+            collection.script = { req: scriptCode };
             return collection;
         }
 
         // script exist but req does not exist, add req only
         if (!collection.script.req) {
-            collection.script.req = req;
+            collection.script.req = scriptCode;
             return collection;
         }
 
@@ -65,7 +60,7 @@ export class BrunoCollectionFileGenerator implements CollectionFileGenerator {
             chalk.yellow(`   Please review the modifications at: ${this.collectionFilePath}`)
         );
 
-        const mergedReq = this.mergePreRequestScripts(collection.script.req, req);
+        const mergedReq = mergePreRequestScripts(collection.script.req, scriptCode);
 
         if (!mergedReq) {
             const error: PrettyPrintableError = {
@@ -81,23 +76,5 @@ export class BrunoCollectionFileGenerator implements CollectionFileGenerator {
 
         this.command.success('Updated existing collection.bru');
         return collection;
-    }
-
-    private mergePreRequestScripts(existing: string, newScript: string) {
-        const lines = existing.split('\n');
-
-        const startIndex = lines.findIndex(line => line.trim() === START_MARKER);
-        const endIndex = lines.findIndex(line => line.trim() === END_MARKER);
-
-        if (startIndex < 0 && endIndex < 0) {
-            return [newScript, existing].join('\n');
-        }
-
-        if (startIndex < endIndex) {
-            lines.splice(startIndex, endIndex - startIndex + 1);
-            return [newScript, lines.join('\n')].join('\n');
-        }
-
-        return null;
     }
 }

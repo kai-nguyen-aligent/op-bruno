@@ -23,3 +23,21 @@ export async function generatePreRequestScript(secretConfigPath: string) {
 
     return result.trimEnd();
 }
+
+export function mergePreRequestScripts(existing: string, newScript: string) {
+    const lines = existing.split('\n');
+
+    const startIndex = lines.findIndex(line => line.trim() === START_MARKER);
+    const endIndex = lines.findIndex(line => line.trim() === END_MARKER);
+
+    if (startIndex < 0 && endIndex < 0) {
+        return [newScript, existing].join('\n');
+    }
+
+    if (startIndex < endIndex) {
+        lines.splice(startIndex, endIndex - startIndex + 1);
+        return [newScript, lines.join('\n')].join('\n');
+    }
+
+    return null;
+}
