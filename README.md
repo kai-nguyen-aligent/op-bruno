@@ -59,7 +59,7 @@ $ npm install -g op-bruno
 $ op-bruno COMMAND
 running command...
 $ op-bruno (--version)
-op-bruno/1.1.0 linux-x64 node-v20.20.2
+op-bruno/1.2.0 linux-x64 node-v20.20.2
 $ op-bruno --help [COMMAND]
 USAGE
   $ op-bruno COMMAND
@@ -99,18 +99,18 @@ Extract secrets from Bruno environment files and generate pre-request script for
 
 ```
 USAGE
-  $ op-bruno sync [COLLECTION] [--json] [--outDir <value>] [--vault <value>] [--title <value>]
+  $ op-bruno sync [COLLECTION] [--json] [--outName <value>] [--vault <value>] [--title <value>]
     [--upsertItem] [--skipPreRequest]
 
 ARGUMENTS
   COLLECTION  Path to Bruno collection directory
 
 FLAGS
-  --outDir=<value>  [default: op-secrets] Output directory name for per-environment secret files
-  --skipPreRequest  Skip generating the pre-request script
-  --title=<value>   1Password item title
-  --upsertItem      Create or Update 1Password item
-  --vault=<value>   [default: Employee] 1Password vault name
+  --outName=<value>  [default: op-secrets.json] JSON output file name
+  --skipPreRequest   Skip generating the pre-request script
+  --title=<value>    1Password item title
+  --upsertItem       Create or Update 1Password item
+  --vault=<value>    [default: Employee] 1Password vault name
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -119,12 +119,12 @@ DESCRIPTION
   Extract secrets from Bruno environment files and generate pre-request script for fetching from 1Password
 
 EXAMPLES
-  $ op-bruno sync ./bruno-collection --outDir op-secrets
+  $ op-bruno sync ./bruno-collection --outName secrets.json
 
-  $ op-bruno sync ./bruno-collection --outDir op-secrets --vault Engineering --title "API Secrets" --upsertItem
+  $ op-bruno sync ./bruno-collection --outName secrets.json --vault Engineering --title "API Secrets" --upsertItem
 ```
 
-_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v1.1.0/src/commands/sync.ts)_
+_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v1.2.0/src/commands/sync.ts)_
 <!-- commandsstop -->
 
 # How It Works
