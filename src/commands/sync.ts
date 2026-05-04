@@ -26,8 +26,8 @@ export default class Sync extends BaseCommand<typeof Sync> {
         'Extract secrets from Bruno environment files and generate pre-request script for fetching from 1Password';
 
     static override examples = [
-        '<%= config.bin %> <%= command.id %> ./bruno-collection --outDir op-secrets',
-        '<%= config.bin %> <%= command.id %> ./bruno-collection --outDir op-secrets --vault Engineering --title "API Secrets" --upsertItem',
+        '<%= config.bin %> <%= command.id %> ./bruno-collection --outName secrets.json',
+        '<%= config.bin %> <%= command.id %> ./bruno-collection --outName secrets.json --vault Engineering --title "API Secrets" --upsertItem',
     ];
 
     static override args = {
@@ -38,10 +38,10 @@ export default class Sync extends BaseCommand<typeof Sync> {
     };
 
     static override flags = {
-        outDir: Flags.string({
-            description: 'Output directory name for per-environment secret files',
-            default: 'op-secrets',
-            defaultHelp: 'The directory will be created in the collection dir',
+        outName: Flags.string({
+            description: 'JSON output file name',
+            default: 'op-secrets.json',
+            defaultHelp: 'The file will be saved in collection dir',
         }),
         vault: Flags.string({ description: '1Password vault name', default: 'Employee' }),
         title: Flags.string({
@@ -136,11 +136,11 @@ export default class Sync extends BaseCommand<typeof Sync> {
             this.error(`Collection directory not found: ${collectionDir}`);
         }
 
-        const outDir = path.join(collectionDir, flags.outDir);
+        const outPath = path.join(collectionDir, flags.outName);
 
         this.log(chalk.bold.cyan('\n🔐 Bruno Secrets Sync Command Line Tool\n'));
         this.log(chalk.blue(`📁 Bruno directory: ${collectionDir}`));
-        this.log(chalk.blue(`📝 Output directory: ${outDir}\n`));
+        this.log(chalk.blue(`📝 Output file: ${outPath}\n`));
 
         try {
             const format = await detectCollectionFormat(collectionDir);
@@ -181,17 +181,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
             }
 
             this.debug(chalk.bold('\nStep 2: Exporting secrets to JSON...'));
-            await fs.ensureDir(outDir);
-            await Promise.all(
-                Object.entries(environments)
-                    .filter(([, secrets]) => secrets.length > 0)
-                    .map(([envName, secrets]) =>
-                        fs.writeFile(
-                            path.join(outDir, `${envName}.json`),
-                            JSON.stringify(secrets, null, 2)
-                        )
-                    )
-            );
+            await fs.writeFile(outPath, JSON.stringify(environments, null, 2));
 
             this.debug(chalk.bold(`\nStep 3: Updating ${configFile}...`));
             await configManager.updateConfig();
@@ -222,7 +212,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
             this.log(chalk.bold.green('\n🏁 Completed Bruno secrets sync!\n'));
             this.log(chalk.green('Summary:'));
             this.log(chalk.green(`  • Extracted secrets from all environment(s)`));
-            this.log(chalk.green(`  • Exported secrets to ${outDir}`));
+            this.log(chalk.green(`  • Exported secrets to ${outPath}`));
             this.log(
                 chalk.green(
                     `  • Whitelisted modules and enabled filesystem access in ${configFile}`

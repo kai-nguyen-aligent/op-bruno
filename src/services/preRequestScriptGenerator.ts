@@ -8,14 +8,14 @@ export const END_MARKER = '// === END: 1Password Secret Management ===';
 
 const TEMPLATE_PATH = '../templates/preRequest.template';
 
-export async function generatePreRequestScript(secretConfigDir: string) {
+export async function generatePreRequestScript(secretConfigPath: string) {
     const templatePath = path.resolve(import.meta.dirname, TEMPLATE_PATH);
     const template = await fs.readFile(templatePath, 'utf-8');
 
     const onePasswordBin = execSync('which op').toString().trim();
 
     const result = ejs.render(template, {
-        secretConfigDir,
+        secretConfigPath,
         onePasswordBin,
         startMarker: START_MARKER,
         endMarker: END_MARKER,
