@@ -60,33 +60,30 @@ export default class Sync extends BaseCommand<typeof Sync> {
 
     private async promptForFlags(
         flags: Awaited<ReturnType<typeof Sync.prototype.parse>>['flags'],
-        metadata: { flags: Record<string, { setFromDefault?: boolean }> },
         collectionName: string
     ) {
-        const isDefault = (name: string) => metadata.flags[name]?.setFromDefault !== false;
-
-        const vault = isDefault('vault')
+        const vault = this.isFlagDefault('vault')
             ? await input({
                   message: '1Password vault name',
                   default: flags.vault,
               })
             : flags.vault;
 
-        const title = isDefault('title')
+        const title = this.isFlagDefault('title')
             ? await input({
                   message: '1Password item title',
                   default: flags.title || collectionName,
               })
             : flags.title;
 
-        const upsertItem = isDefault('upsertItem')
+        const upsertItem = this.isFlagDefault('upsertItem')
             ? await confirm({
                   message: 'Create or update 1Password item?',
                   default: flags.upsertItem,
               })
             : flags.upsertItem;
 
-        const skipPreRequest = isDefault('skipPreRequest')
+        const skipPreRequest = this.isFlagDefault('skipPreRequest')
             ? await confirm({
                   message: 'Skip generating the pre-request script?',
                   default: flags.skipPreRequest,
@@ -123,7 +120,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
     }
 
     async run(): Promise<void> {
-        const { args, flags, metadata } = await this.parse(Sync);
+        const { args, flags } = this;
         const collection =
             args.collection ??
             (await input({
@@ -156,7 +153,6 @@ export default class Sync extends BaseCommand<typeof Sync> {
 
             const { vault, title, upsertItem, skipPreRequest } = await this.promptForFlags(
                 flags,
-                metadata,
                 collectionName
             );
 
@@ -203,7 +199,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
                     chalk.bold(`\nStep 5: Updating ${collectionFile} with pre-request script...`)
                 );
 
-                await collectionGen.updateCollection(flags.outDir);
+                await collectionGen.updateCollection(flags.outName);
             } else {
                 this.skipped('Skipping pre-request script generation (--skipPreRequest flag)');
             }

@@ -1,16 +1,15 @@
 import { Command, Interfaces } from '@oclif/core';
-import { PrettyPrintableError } from '@oclif/core/interfaces';
 import chalk from 'chalk';
 
+export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<
     (typeof BaseCommand)['baseFlags'] & T['flags']
 >;
-export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
 
 export type ErrorOptions = {
     code?: string;
     exit?: number | false;
-} & PrettyPrintableError;
+} & Interfaces.PrettyPrintableError;
 
 export abstract class BaseCommand<T extends typeof Command> extends Command {
     // add the --json flag
@@ -18,10 +17,11 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
 
     protected flags!: Flags<T>;
     protected args!: Args<T>;
+    private flagsMetadata!: Interfaces.ParserOutput['metadata']['flags'];
 
     public override async init(): Promise<void> {
         await super.init();
-        const { args, flags } = await this.parse({
+        const { args, flags, metadata } = await this.parse({
             flags: this.ctor.flags,
             enableJsonFlag: this.ctor.enableJsonFlag,
             args: this.ctor.args,
@@ -29,6 +29,11 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
         });
         this.flags = flags as Flags<T>;
         this.args = args as Args<T>;
+        this.flagsMetadata = metadata?.flags ?? {};
+    }
+
+    protected isFlagDefault(name: string): boolean {
+        return this.flagsMetadata[name]?.setFromDefault !== false;
     }
 
     protected override async catch(err: Error & { exitCode?: number }): Promise<unknown> {
