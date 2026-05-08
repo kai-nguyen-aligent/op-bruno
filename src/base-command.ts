@@ -33,7 +33,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     }
 
     protected isFlagDefault(name: string): boolean {
-        return this.flagsMetadata[name]?.setFromDefault !== false;
+        return this.flagsMetadata[name]?.setFromDefault === true;
     }
 
     protected override async catch(err: Error & { exitCode?: number }): Promise<unknown> {
