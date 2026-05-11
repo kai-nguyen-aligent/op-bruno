@@ -36,17 +36,22 @@ async function fetchSecretsFrom1Password() {
 
         console.log(`Fetching secrets for ${env} environment from 1Password...`);
 
-        const promises = secrets.map(async secret => {
-            const { stdout } = await execAsync(`${ONE_PASSWORD_BINARY} read "${secret.value}"`);
-            bru.setEnvVar(secret.name, stdout.trim());
-        });
+        // Send the first request synchronously to validate the 1Password session
+        const [first, ...rest] = secrets;
+        const { stdout: firstValue } = await execAsync(`${ONE_PASSWORD_BINARY} read "${first.value}"`);
+        bru.setEnvVar(first.name, firstValue.trim());
 
-        Promise.all(promise).catch(error => {
-            console.error(error);
-            throw new Error(
-                'Error fetching secrets from 1Password! Check console log for more details.'
-            );
-        });
+        if (rest.length > 0) {
+            const promises = rest.map(async secret => {
+                const { stdout } = await execAsync(`${ONE_PASSWORD_BINARY} read "${secret.value}"`);
+                bru.setEnvVar(secret.name, stdout.trim());
+            });
+
+            await Promise.all(promises).catch(error => {
+                console.error(error);
+                throw new Error('Failed to fetch secrets from 1Password! Check console log for more details.');
+            });
+        }
 
         bru.setEnvVar('OP_SECRETS_LOADED', 'true');
         console.log(
