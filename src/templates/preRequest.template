@@ -1,24 +1,28 @@
 <%= startMarker %>
 // Auto-generated script to fetch secrets from 1Password
 
-const { execSync } = require('child_process');
-const { readFileSync, existsSync } = require('fs');
-
 const SECRET_CONFIG_PATH = '<%= secretConfigPath %>';
 const ONE_PASSWORD_BINARY = '<%= onePasswordBin %>';
 
-async function fetchSecretsFrom1Password() {
-    if (bru.isSafeMode()) {
-        throw new Error('Developer Mode must be enabled for fetching secrets from 1Password. Please enable it in Settings > Developer Mode.');
-    }
+if (bru.isSafeMode()) {
+    throw new Error('Developer Mode must be enabled for fetching secrets from 1Password.');
+}
 
+async function fetchSecretsFrom1Password() {
     const env = bru.getEnvName();
     const isSecretLoaded = bru.getEnvVar('OP_SECRETS_LOADED');
 
     if (env && !isSecretLoaded) {
+        const { exec } = require('child_process');
+        const { promisify } = require('util');
+        const { readFileSync, existsSync } = require('fs');
+        const execAsync = promisify(exec);
         const configPath = `${bru.cwd()}/${SECRET_CONFIG_PATH}`;
+
         if (!existsSync(configPath)) {
-            console.log(`No secrets file found at ${configPath}, skip fetching secrets from 1Password.`);
+            console.log(
+                `No secrets file found at ${configPath}, skip fetching secrets from 1Password.`
+            );
             return;
         }
 
@@ -32,14 +36,16 @@ async function fetchSecretsFrom1Password() {
 
         console.log(`Fetching secrets for ${env} environment from 1Password...`);
 
-        const promise = secrets.map(async secret => {
-            const value = execSync(`${ONE_PASSWORD_BINARY} read "${secret.value}"`);
-            bru.setEnvVar(secret.name, value.toString().trim());
+        const promises = secrets.map(async secret => {
+            const { stdout } = await execAsync(`${ONE_PASSWORD_BINARY} read "${secret.value}"`);
+            bru.setEnvVar(secret.name, stdout.trim());
         });
 
         Promise.all(promise).catch(error => {
             console.error(error);
-            throw new Error('Error fetching secrets from 1Password! Check console log for more details.');
+            throw new Error(
+                'Error fetching secrets from 1Password! Check console log for more details.'
+            );
         });
 
         bru.setEnvVar('OP_SECRETS_LOADED', 'true');

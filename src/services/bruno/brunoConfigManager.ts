@@ -6,12 +6,17 @@ import { BrunoConfig, ConfigManager } from '../../types/index.js';
 
 export class BrunoConfigManager implements ConfigManager {
     private readonly configPath: string;
-    private readonly requiredModules = ['child_process', 'fs'];
+    private readonly requiredModules: string[];
     private readonly command: BaseCommand<typeof Sync>;
 
-    constructor(collectionDir: string, command: BaseCommand<typeof Sync>) {
+    constructor(
+        collectionDir: string,
+        command: BaseCommand<typeof Sync>,
+        requiredModules: string[]
+    ) {
         this.configPath = path.join(collectionDir, 'bruno.json');
         this.command = command;
+        this.requiredModules = requiredModules;
     }
 
     private async getConfig(): Promise<BrunoConfig> {

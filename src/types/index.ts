@@ -42,7 +42,7 @@ export interface OpenCollectionConfig {
             allow: boolean;
         };
     };
-    runtime?: {
+    request?: {
         scripts?: RuntimeScript[];
         [key: string]: unknown;
     };

@@ -33,7 +33,7 @@ export class YamlCollectionFileGenerator implements CollectionFileGenerator {
 
         const scriptCode = await generatePreRequestScript(secretsPath);
         const existingBeforeRequest =
-            originalConfig.runtime?.scripts?.findIndex(s => s.type === 'before-request') ?? -1;
+            originalConfig.request?.scripts?.findIndex(s => s.type === 'before-request') ?? -1;
 
         const config =
             existingBeforeRequest >= 0
@@ -54,15 +54,15 @@ export class YamlCollectionFileGenerator implements CollectionFileGenerator {
             code: scriptCode,
         };
 
-        if (!config.runtime) {
-            config.runtime = { scripts: [] };
+        if (!config.request) {
+            config.request = { scripts: [] };
         }
 
-        if (!config.runtime.scripts) {
-            config.runtime.scripts = [];
+        if (!config.request.scripts) {
+            config.request.scripts = [];
         }
 
-        config.runtime.scripts.push(script);
+        config.request.scripts.push(script);
 
         this.command.success('Added new before-request script to opencollection.yml');
         return config;
@@ -78,7 +78,7 @@ export class YamlCollectionFileGenerator implements CollectionFileGenerator {
             chalk.yellow(`   Please review the modifications at: ${this.collectionFilePath}`)
         );
 
-        const existingScript = config.runtime!.scripts![existingIndex]!;
+        const existingScript = config.request!.scripts![existingIndex]!;
         const mergedCode = mergePreRequestScripts(existingScript.code, scriptCode);
 
         if (!mergedCode) {
@@ -91,7 +91,7 @@ export class YamlCollectionFileGenerator implements CollectionFileGenerator {
             throw error;
         }
 
-        config.runtime!.scripts![existingIndex] = {
+        config.request!.scripts![existingIndex] = {
             type: 'before-request',
             code: mergedCode.trimEnd(),
         };

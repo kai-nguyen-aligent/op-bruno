@@ -6,6 +6,7 @@ import * as path from 'path';
 import { BaseCommand } from '../base-command.js';
 
 import { PrettyPrintableError } from '@oclif/core/interfaces';
+import { REQUIRED_MODULES } from '../constants.js';
 import { BrunoCollectionFileGenerator } from '../services/bruno/brunoCollectionFileGen.js';
 import { BrunoConfigManager } from '../services/bruno/brunoConfigManager.js';
 import { BrunoEnvironmentsExport } from '../services/bruno/brunoEnvironmentsExport.js';
@@ -106,8 +107,8 @@ export default class Sync extends BaseCommand<typeof Sync> {
 
     private createConfigManager(format: CollectionFormat, collectionDir: string): ConfigManager {
         return format === 'yaml'
-            ? new YamlConfigManager(collectionDir, this)
-            : new BrunoConfigManager(collectionDir, this);
+            ? new YamlConfigManager(collectionDir, this, REQUIRED_MODULES)
+            : new BrunoConfigManager(collectionDir, this, REQUIRED_MODULES);
     }
 
     private createCollectionGen(

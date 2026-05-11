@@ -2,9 +2,7 @@ import { execSync } from 'child_process';
 import ejs from 'ejs';
 import fs from 'fs-extra';
 import path from 'path';
-
-export const START_MARKER = '// === START: 1Password Secret Management ===';
-export const END_MARKER = '// === END: 1Password Secret Management ===';
+import { END_MARKER, START_MARKER } from '../constants.js';
 
 const TEMPLATE_PATH = '../templates/preRequest.template';
 
