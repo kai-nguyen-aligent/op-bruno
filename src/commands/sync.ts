@@ -57,6 +57,10 @@ export default class Sync extends BaseCommand<typeof Sync> {
             description: 'Skip generating the pre-request script',
             default: false,
         }),
+        secretsTtl: Flags.integer({
+            description: 'How often secrets are refetched, in hours',
+            default: 3,
+        }),
     };
 
     private async promptForFlags(
@@ -200,7 +204,7 @@ export default class Sync extends BaseCommand<typeof Sync> {
                     chalk.bold(`\nStep 5: Updating ${collectionFile} with pre-request script...`)
                 );
 
-                await collectionGen.updateCollection(flags.outName);
+                await collectionGen.updateCollection(flags.outName, flags.secretsTtl);
             } else {
                 this.skipped('Skipping pre-request script generation (--skipPreRequest flag)');
             }

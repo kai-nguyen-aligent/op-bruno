@@ -17,10 +17,10 @@ export class BrunoCollectionFileGenerator implements CollectionFileGenerator {
         this.command = command;
     }
 
-    async updateCollection(secretsPath: string) {
+    async updateCollection(secretsPath: string, secretsTtlHours: number) {
         const doesCollectionFileExist = await fs.pathExists(this.collectionFilePath);
 
-        const scriptCode = await generatePreRequestScript(secretsPath);
+        const scriptCode = await generatePreRequestScript(secretsPath, secretsTtlHours);
 
         const collection = doesCollectionFileExist
             ? await this.modifyExistingCollection(scriptCode)

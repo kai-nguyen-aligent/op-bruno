@@ -3,6 +3,7 @@
 
 const SECRET_CONFIG_PATH = '<%= secretConfigPath %>';
 const ONE_PASSWORD_BINARY = '<%= onePasswordBin %>';
+const SECRETS_TTL_MS = <%= secretsTtlMs %>;
 
 if (bru.isSafeMode()) {
     throw new Error('Developer Mode must be enabled for fetching secrets from 1Password.');
@@ -10,9 +11,10 @@ if (bru.isSafeMode()) {
 
 async function fetchSecretsFrom1Password() {
     const env = bru.getEnvName();
-    const isSecretLoaded = bru.getEnvVar('OP_SECRETS_LOADED');
+    const secretsExpiredAt = bru.getEnvVar('OP_SECRETS_EXPIRED_AT');
+    const isExpired = !secretsExpiredAt || new Date(secretsExpiredAt) <= new Date();
 
-    if (env && !isSecretLoaded) {
+    if (env && isExpired) {
         const { exec } = require('child_process');
         const { promisify } = require('util');
         const { readFileSync, existsSync } = require('fs');
@@ -53,9 +55,10 @@ async function fetchSecretsFrom1Password() {
             });
         }
 
-        bru.setEnvVar('OP_SECRETS_LOADED', 'true');
+        const expiresAt = new Date(Date.now() + SECRETS_TTL_MS).toISOString();
+        bru.setEnvVar('OP_SECRETS_EXPIRED_AT', expiresAt);
         console.log(
-            `Secrets fetched successfully for ${env}. They will be available until Bruno is restarted.`
+            `Secrets fetched successfully for ${env}. They will be refetched after ${expiresAt}.`
         );
     }
 }

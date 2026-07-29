@@ -6,7 +6,7 @@ import { END_MARKER, START_MARKER } from '../constants.js';
 
 const TEMPLATE_PATH = '../templates/preRequest.template';
 
-export async function generatePreRequestScript(secretConfigPath: string) {
+export async function generatePreRequestScript(secretConfigPath: string, secretsTtlHours: number) {
     const templatePath = path.resolve(import.meta.dirname, TEMPLATE_PATH);
     const template = await fs.readFile(templatePath, 'utf-8');
 
@@ -15,6 +15,7 @@ export async function generatePreRequestScript(secretConfigPath: string) {
     const result = ejs.render(template, {
         secretConfigPath,
         onePasswordBin,
+        secretsTtlMs: secretsTtlHours * 60 * 60 * 1000,
         startMarker: START_MARKER,
         endMarker: END_MARKER,
     });

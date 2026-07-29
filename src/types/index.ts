@@ -70,5 +70,5 @@ export interface ConfigManager {
 }
 
 export interface CollectionFileGenerator {
-    updateCollection(secretsPath: string): Promise<void>;
+    updateCollection(secretsPath: string, secretsTtlHours: number): Promise<void>;
 }

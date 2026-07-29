@@ -17,7 +17,7 @@ export class YamlCollectionFileGenerator implements CollectionFileGenerator {
         this.command = command;
     }
 
-    async updateCollection(secretsPath: string): Promise<void> {
+    async updateCollection(secretsPath: string, secretsTtlHours: number): Promise<void> {
         const isCollectionFileExist = await fs.pathExists(this.collectionFilePath);
 
         if (!isCollectionFileExist) {
@@ -31,7 +31,7 @@ export class YamlCollectionFileGenerator implements CollectionFileGenerator {
             throw new Error(`Invalid opencollection.yml at ${this.collectionFilePath}`);
         }
 
-        const scriptCode = await generatePreRequestScript(secretsPath);
+        const scriptCode = await generatePreRequestScript(secretsPath, secretsTtlHours);
         const existingBeforeRequest =
             originalConfig.request?.scripts?.findIndex(s => s.type === 'before-request') ?? -1;
 
