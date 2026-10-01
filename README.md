@@ -7,24 +7,25 @@ A CLI tool to sync Bruno API client secrets with 1Password, enabling secure secr
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support%20Me-orange)](https://coff.ee/kai.nguyen)
 
 <!-- toc -->
-* [op-bruno](#op-bruno)
-* [Features](#features)
-* [Installation](#installation)
-* [Install the tool globally](#install-the-tool-globally)
-* [Execute without installation](#execute-without-installation)
-* [Prerequisites](#prerequisites)
-* [Usage](#usage)
-* [Commands](#commands)
-* [How It Works](#how-it-works)
-* [Security Considerations](#security-considerations)
-* [Development](#development)
-* [Run in development mode](#run-in-development-mode)
-* [Build the project](#build-the-project)
-* [Run tests](#run-tests)
-* [Lint code](#lint-code)
-* [Troubleshooting](#troubleshooting)
-* [License](#license)
-* [Contributing](#contributing)
+
+- [op-bruno](#op-bruno)
+- [Features](#features)
+- [Installation](#installation)
+- [Prerequisites](#prerequisites)
+- [Usage](#usage)
+- [Commands](#commands)
+  - [`op-bruno help [COMMAND]`](#op-bruno-help-command)
+  - [`op-bruno sync [COLLECTION]`](#op-bruno-sync-collection)
+- [How It Works](#how-it-works)
+  - [Pre-request Script](#pre-request-script)
+- [Security Considerations](#security-considerations)
+- [Development](#development)
+- [Troubleshooting](#troubleshooting)
+  - [1Password CLI Not Found](#1password-cli-not-found)
+  - [Vault Access Denied](#vault-access-denied)
+  - [Pre-request Script Already Exists](#pre-request-script-already-exists)
+- [License](#license)
+- [Contributing](#contributing)
 <!-- tocstop -->
 
 # Features
@@ -54,6 +55,7 @@ npx op-bruno
 # Usage
 
 <!-- usage -->
+
 ```sh-session
 $ npm install -g op-bruno
 $ op-bruno COMMAND
@@ -65,13 +67,15 @@ USAGE
   $ op-bruno COMMAND
 ...
 ```
+
 <!-- usagestop -->
 
 # Commands
 
 <!-- commands -->
-* [`op-bruno help [COMMAND]`](#op-bruno-help-command)
-* [`op-bruno sync [COLLECTION]`](#op-bruno-sync-collection)
+
+- [`op-bruno help [COMMAND]`](#op-bruno-help-command)
+- [`op-bruno sync [COLLECTION]`](#op-bruno-sync-collection)
 
 ## `op-bruno help [COMMAND]`
 
@@ -126,6 +130,7 @@ EXAMPLES
 ```
 
 _See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v1.3.0/src/commands/sync.ts)_
+
 <!-- commandsstop -->
 
 # How It Works
@@ -166,10 +171,13 @@ The generated pre-request script in `collection.bru` will:
 2. Check if a secrets file exists for that environment (`op-secrets/<env>.json`)
 3. If found, fetch the corresponding secrets from 1Password
 4. Set environment variables for use in requests
-5. Store an expiry timestamp (`OP_SECRETS_EXPIRED_AT`) so secrets are automatically refetched after 1 hour
+5. Store an expiry timestamp (`OP_SECRETS_EXPIRED_AT` secret) so secrets are automatically refetched after 1 hour
 
 > **Why periodic refetching?**
-> In [Bruno v4](https://blog.usebruno.com/bruno-v3-v4-breaking-changes#env-vars), environment variables set via `bru.setEnvVar()` now persist across application restarts. Bruno stores these values on disc, encrypted using OS-level encryption when available (falling back to AES-256). Previously, variables were stored in-memory only, so secrets were fetched every time application restarts. With the new behaviour, secrets are cached and only refetched once the configurable (default to 3-hour) window expires. 
+> In [Bruno v4](https://blog.usebruno.com/bruno-v3-v4-breaking-changes#env-vars), environment variables set via `bru.setEnvVar()` now persist across application restarts. Bruno stores these values on disc, encrypted using OS-level encryption when available (falling back to AES-256). Previously, variables were stored in-memory only, so secrets were fetched every time application restarts. With the new behaviour, secrets are cached and only refetched once the configurable (default to 3-hour) window expires.
+>
+> **Why is `OP_SECRETS_EXPIRED_AT` a secret variable?**
+> Bruno only persists secret values locally, never into the environment file itself. A normal var would write the timestamp straight into the file on every refetch, churning git history and causing merge conflicts between teammates. This secret variable therefore is created automatically in each environment file if missing.
 
 # Security Considerations
 

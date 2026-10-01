@@ -19,4 +19,5 @@ declare module '@usebruno/lang' {
     export function jsonToCollectionBru(obj: Collection): string;
 
     export function bruToEnvJsonV2(input: string): Environment;
+    export function envJsonToBruV2(input: Environment): string;
 }

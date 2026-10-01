@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import ejs from 'ejs';
 import fs from 'fs-extra';
 import path from 'path';
-import { END_MARKER, START_MARKER } from '../constants.js';
+import { END_MARKER, OP_SECRETS_EXPIRED_AT_VAR, START_MARKER } from '../constants.js';
 
 const TEMPLATE_PATH = '../templates/preRequest.template';
 
@@ -18,6 +18,7 @@ export async function generatePreRequestScript(secretConfigPath: string, secrets
         secretsTtlMs: secretsTtlHours * 60 * 60 * 1000,
         startMarker: START_MARKER,
         endMarker: END_MARKER,
+        secretsExpiredAtVar: OP_SECRETS_EXPIRED_AT_VAR,
     });
 
     return result.trimEnd();

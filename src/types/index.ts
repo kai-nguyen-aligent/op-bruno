@@ -18,6 +18,7 @@ export interface OpenCollectionVariable {
     enabled: boolean;
     secret: boolean;
     type?: string;
+    description?: string;
 }
 
 export interface OpenCollectionEnvironment {

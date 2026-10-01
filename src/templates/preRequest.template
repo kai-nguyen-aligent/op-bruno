@@ -11,7 +11,7 @@ if (bru.isSafeMode()) {
 
 async function fetchSecretsFrom1Password() {
     const env = bru.getEnvName();
-    const secretsExpiredAt = bru.getEnvVar('OP_SECRETS_EXPIRED_AT');
+    const secretsExpiredAt = bru.getEnvVar('<%= secretsExpiredAtVar %>');
     const isExpired = !secretsExpiredAt || new Date(secretsExpiredAt) <= new Date();
 
     if (env && isExpired) {
@@ -56,7 +56,7 @@ async function fetchSecretsFrom1Password() {
         }
 
         const expiresAt = new Date(Date.now() + SECRETS_TTL_MS).toISOString();
-        bru.setEnvVar('OP_SECRETS_EXPIRED_AT', expiresAt);
+        bru.setEnvVar('<%= secretsExpiredAtVar %>', expiresAt);
         console.log(
             `Secrets fetched successfully for ${env}. They will be refetched after ${expiresAt}.`
         );
