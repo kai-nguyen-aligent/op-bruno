@@ -7,25 +7,24 @@ A CLI tool to sync Bruno API client secrets with 1Password, enabling secure secr
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support%20Me-orange)](https://coff.ee/kai.nguyen)
 
 <!-- toc -->
-
-- [op-bruno](#op-bruno)
-- [Features](#features)
-- [Installation](#installation)
-- [Prerequisites](#prerequisites)
-- [Usage](#usage)
-- [Commands](#commands)
-  - [`op-bruno help [COMMAND]`](#op-bruno-help-command)
-  - [`op-bruno sync [COLLECTION]`](#op-bruno-sync-collection)
-- [How It Works](#how-it-works)
-  - [Pre-request Script](#pre-request-script)
-- [Security Considerations](#security-considerations)
-- [Development](#development)
-- [Troubleshooting](#troubleshooting)
-  - [1Password CLI Not Found](#1password-cli-not-found)
-  - [Vault Access Denied](#vault-access-denied)
-  - [Pre-request Script Already Exists](#pre-request-script-already-exists)
-- [License](#license)
-- [Contributing](#contributing)
+* [op-bruno](#op-bruno)
+* [Features](#features)
+* [Installation](#installation)
+* [Install the tool globally](#install-the-tool-globally)
+* [Execute without installation](#execute-without-installation)
+* [Prerequisites](#prerequisites)
+* [Usage](#usage)
+* [Commands](#commands)
+* [How It Works](#how-it-works)
+* [Security Considerations](#security-considerations)
+* [Development](#development)
+* [Run in development mode](#run-in-development-mode)
+* [Build the project](#build-the-project)
+* [Run tests](#run-tests)
+* [Lint code](#lint-code)
+* [Troubleshooting](#troubleshooting)
+* [License](#license)
+* [Contributing](#contributing)
 <!-- tocstop -->
 
 # Features
@@ -55,27 +54,24 @@ npx op-bruno
 # Usage
 
 <!-- usage -->
-
 ```sh-session
 $ npm install -g op-bruno
 $ op-bruno COMMAND
 running command...
 $ op-bruno (--version)
-op-bruno/1.3.0 linux-x64 node-v24.18.0
+op-bruno/1.3.1 linux-x64 node-v24.21.0
 $ op-bruno --help [COMMAND]
 USAGE
   $ op-bruno COMMAND
 ...
 ```
-
 <!-- usagestop -->
 
 # Commands
 
 <!-- commands -->
-
-- [`op-bruno help [COMMAND]`](#op-bruno-help-command)
-- [`op-bruno sync [COLLECTION]`](#op-bruno-sync-collection)
+* [`op-bruno help [COMMAND]`](#op-bruno-help-command)
+* [`op-bruno sync [COLLECTION]`](#op-bruno-sync-collection)
 
 ## `op-bruno help [COMMAND]`
 
@@ -129,8 +125,7 @@ EXAMPLES
   $ op-bruno sync ./bruno-collection --outName secrets.json --vault Engineering --title "API Secrets" --upsertItem
 ```
 
-_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v1.3.0/src/commands/sync.ts)_
-
+_See code: [src/commands/sync.ts](https://github.com/kai-nguyen-aligent/op-bruno/blob/v1.3.1/src/commands/sync.ts)_
 <!-- commandsstop -->
 
 # How It Works
