@@ -70,12 +70,16 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Package dist artifact
+        if: ${{ steps.version-check.outputs.skipped == 'false' }}
+        run: tar -czf "$RUNNER_TEMP/dist.tar.gz" dist
+
       - name: Create Github Release
         uses: ncipollo/release-action@v1
         if: ${{ steps.version-check.outputs.skipped == 'false' }}
         with:
           name: ${{ steps.version-check.outputs.tag }}
-          artifacts: dist/*
+          artifacts: ${{ runner.temp }}/dist.tar.gz
           tag: ${{ steps.version-check.outputs.tag }}
           commit: ${{ github.ref_name }}
           token: ${{ github.token }}
